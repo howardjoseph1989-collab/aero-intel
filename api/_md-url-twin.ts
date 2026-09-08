@@ -10,7 +10,9 @@
  * answers, and reports that response's status. A path with no page behind it
  * therefore 404s. Only a served document gets a canonical, and it points at
  * the sibling — never at the `.md` URL, which would set a stub competing with
- * the page it summarises (#7860).
+ * the page it summarises (#7860). That rule is scoped to generated twins: the
+ * curated `.md` files under public/ are the only representation of their own
+ * content, have no HTML sibling to defer to, and self-canonicalise correctly.
  *
  * Loop-prevention: sibling fetches send x-wm-md-twin so a .md handler never
  * fetches another .md handler.
@@ -49,7 +51,7 @@ const REWRITE_SYNTHETIC_PARAMS = ['path', 'mdPath'] as const;
  * Corpus pages answer 308 from `/x` to `/x/`. Following that hop is what turns
  * a soft-404 stub into the real document — or into the origin's honest 404.
  */
-const MAX_SIBLING_REDIRECTS = 3;
+export const MAX_SIBLING_REDIRECTS = 3;
 const FORWARDED_RESPONSE_HEADERS = [
   'allow',
   'location',
@@ -172,9 +174,31 @@ function jsonToMarkdown(raw: string, heading: string): string {
 }
 
 function withMarkdownMetadata(markdown: string, canonical: string): string {
-  if (markdown.startsWith('---\n')) return markdown;
+  if (markdown.startsWith('---\n')) return withCanonicalFrontMatter(markdown, canonical);
   const title = markdown.match(/^# (.+)$/m)?.[1] ?? headingFromPath(new URL(canonical).pathname);
   return `---\ntitle: ${JSON.stringify(title)}\ncanonical: ${JSON.stringify(canonical)}\n---\n\n${markdown}`;
+}
+
+/**
+ * The sibling's negotiated markdown arrives with front matter of its own
+ * (title, description, image) and no canonical, so returning it untouched
+ * would ship a document whose body never names the page it represents — the
+ * Link header would carry the canonical and the body would contradict it by
+ * omission. Set the key here instead, keeping every field the origin wrote.
+ * Only a top-level `canonical:` is replaced; an indented one belongs to some
+ * other key's mapping and is left alone.
+ */
+function withCanonicalFrontMatter(markdown: string, canonical: string): string {
+  const terminator = markdown.indexOf('\n---', 4);
+  // Unterminated front matter is not front matter — leave the body untouched
+  // rather than guessing where the block was meant to end.
+  if (terminator === -1) return markdown;
+  const fields = markdown
+    .slice(4, terminator)
+    .split('\n')
+    .filter((line) => !/^canonical\s*:/.test(line))
+    .join('\n');
+  return `---\n${fields}\ncanonical: ${JSON.stringify(canonical)}${markdown.slice(terminator)}`;
 }
 
 /**
@@ -205,6 +229,19 @@ function markdownHeaders(
     Link: links,
     ...extra,
   };
+}
+
+/**
+ * A 404 or 410 is a property of the URL, so a shared cache can absorb the
+ * repeats — which matters precisely because the `.md` space is unbounded and
+ * crawlers probe it: `noindex` keeps those paths out of the index, and this
+ * keeps each re-probe from costing an origin round trip. Every other failure
+ * status describes this attempt rather than the URL (an upstream blip, a rate
+ * limit, an auth state), and caching one would pin a real page to a wrong
+ * answer for the whole TTL.
+ */
+function failureCacheControl(status: number): string {
+  return status === 404 || status === 410 ? 'public, max-age=0, s-maxage=300' : 'no-store';
 }
 
 /** Headers for a twin with no indexable document behind it. */
@@ -334,13 +371,17 @@ export async function buildMarkdownTwinResponse(
   let siblingUrl = siblingRequestUrl(req, sibling);
   let siblingRes: Response;
   let followed = 0;
+  // One deadline for the whole chain, not one per hop. A fresh timeout inside
+  // the loop would multiply the budget by the hop count, so a chain of slow but
+  // individually-passing hops could outlive the edge function itself.
+  const siblingDeadline = AbortSignal.timeout(SIBLING_FETCH_TIMEOUT_MS);
   for (;;) {
     try {
       siblingRes = await fetchImpl(siblingUrl, {
         method: req.method,
         headers: outbound,
         redirect: 'manual',
-        signal: AbortSignal.timeout(SIBLING_FETCH_TIMEOUT_MS),
+        signal: siblingDeadline,
       });
     } catch {
       return new Response(
@@ -363,11 +404,13 @@ export async function buildMarkdownTwinResponse(
     // documents it rather than fetching another site on the caller's behalf.
     if (!target || target.origin !== siblingUrl.origin) {
       void siblingRes.body?.cancel().catch(() => {});
+      // A redirect notice, not a representation of the sibling, so it gets no
+      // canonical in either the headers or the body — `noindex` is the whole
+      // signal. Pairing the two would contradict each other.
       const body = `# ${headingFromPath(sibling)}\n\nThis resource redirects to [${location}](${location}).\n`;
-      const canonical = new URL(sibling, req.url).href;
-      return new Response(req.method === 'HEAD' ? null : withMarkdownMetadata(body, canonical), {
+      return new Response(req.method === 'HEAD' ? null : body, {
         status: 200,
-        headers: markdownHeaders(canonical, { 'X-Robots-Tag': 'noindex' }),
+        headers: nonDocumentHeaders(),
       });
     }
 
@@ -392,7 +435,9 @@ export async function buildMarkdownTwinResponse(
   const isFailure = !siblingRes.ok;
   const siblingStatus = isFailure ? siblingRes.status : 200;
   const responseHeaders: Record<string, string> = {
-    ...(isFailure ? { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } : {}),
+    ...(isFailure
+      ? { 'Cache-Control': failureCacheControl(siblingStatus), 'X-Robots-Tag': 'noindex' }
+      : {}),
     ...forwardedResponseHeaders(siblingRes),
   };
   const documentHeaders = (extra: Record<string, string>) =>
@@ -440,7 +485,10 @@ export async function buildMarkdownTwinResponse(
     });
   }
 
-  return new Response(withMarkdownMetadata(markdown, canonical), {
+  // The metadata block names the page this document represents, so it belongs
+  // only on a served document. Emitting it on a failure would have the body
+  // claim a canonical the headers deliberately withhold.
+  return new Response(isFailure ? markdown : withMarkdownMetadata(markdown, canonical), {
     status: siblingStatus,
     headers: documentHeaders(responseHeaders),
   });

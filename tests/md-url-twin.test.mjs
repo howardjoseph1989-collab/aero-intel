@@ -4,6 +4,7 @@ import { load } from 'js-yaml';
 
 import handler from '../api/md-twin.ts';
 import {
+  MAX_SIBLING_REDIRECTS,
   MAX_TWIN_BYTES,
   MD_TWIN_LOOP_HEADER,
   buildMarkdownTwinResponse,
@@ -387,8 +388,24 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
     );
 
     assert.equal(res.status, 404);
-    assert.equal(res.headers.get('cache-control'), 'no-store');
     assert.equal(res.headers.get('x-robots-tag'), 'noindex');
+    // Shared-cacheable on purpose. The `.md` space is unbounded and crawlers
+    // probe it, so an uncacheable 404 would make every re-probe cost an origin
+    // round trip — and each one fans out across the redirect chain.
+    assert.equal(res.headers.get('cache-control'), 'public, max-age=0, s-maxage=300');
+  });
+
+  it('keeps a transient upstream failure out of the shared cache', async () => {
+    for (const status of [500, 502, 503, 429]) {
+      const res = await buildMarkdownTwinResponse(
+        new Request('https://www.worldmonitor.app/countries/iran.md'),
+        '/countries/iran.md',
+        async () => new Response('upstream failure', { status }),
+      );
+
+      assert.equal(res.status, status);
+      assert.equal(res.headers.get('cache-control'), 'no-store', `${status} must not be cached`);
+    }
   });
 
   it('never declares a stub the canonical representation of itself', async () => {
@@ -399,8 +416,10 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
       fetchImpl,
     );
 
-    assert.doesNotMatch(res.headers.get('link') ?? '', /does-not-exist-xyz\.md>; rel="canonical"/);
-    assert.doesNotMatch(await res.text(), /canonical:.*does-not-exist-xyz\.md/);
+    assert.doesNotMatch(res.headers.get('link') ?? '', /rel="canonical"/);
+    // Not just "no self-canonical": a 404 names no canonical at all, or the
+    // body would claim a page the headers deliberately withhold.
+    assert.doesNotMatch(await res.text(), /^canonical:/m);
   });
 
   it('points the canonical at the HTML sibling, not at the .md twin', async () => {
@@ -424,9 +443,13 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
       fetchImpl,
     );
 
-    assert.ok(seen.length > 0, 'the sibling must be fetched');
+    assert.ok(seen.length > 1, 'the redirect hop and the resolved fetch must both be seen');
     for (const { init } of seen) {
-      assert.match(new Headers(init?.headers).get('accept') ?? '', /text\/markdown/);
+      const headers = new Headers(init?.headers);
+      assert.match(headers.get('accept') ?? '', /text\/markdown/);
+      // The guard has to ride every hop, not just the first: a followed
+      // redirect that lands back on a `.md` path would otherwise recurse.
+      assert.equal(headers.get(MD_TWIN_LOOP_HEADER), '1');
     }
   });
 
@@ -444,15 +467,23 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
     }
   });
 
+  // Stripping the rewrite's params must not become "strip the query string":
+  // a caller's own params still have to reach the page, while the canonical
+  // stays query-free so two parameterisations do not compete as documents.
   it('forwards a caller query string that is not a rewrite artifact', async () => {
     const { seen, fetchImpl } = corpusOrigin({ trailingSlashBody: IRAN_MARKDOWN });
-    await buildMarkdownTwinResponse(
-      new Request('https://www.worldmonitor.app/countries/iran.md?window=7d'),
+    const res = await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/api/md-twin?path=countries%2Firan&window=7d'),
       '/countries/iran.md',
       fetchImpl,
     );
 
     assert.equal(seen[0].url.searchParams.get('window'), '7d');
+    assert.equal(seen[0].url.searchParams.get('path'), null);
+    assert.match(
+      res.headers.get('link') ?? '',
+      /<https:\/\/www\.worldmonitor\.app\/countries\/iran\/>; rel="canonical"/,
+    );
   });
 
   it('stops following same-origin redirects instead of looping forever', async () => {
@@ -466,9 +497,42 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
       },
     );
 
-    assert.ok(hops <= 4, `redirect chain must be bounded, saw ${hops} hops`);
+    // Exact, not an upper bound: a budget that silently shrank to zero hops
+    // would still satisfy `<= 4` while breaking every corpus page, all of
+    // which need one hop to reach their trailing-slash form.
+    assert.equal(hops, MAX_SIBLING_REDIRECTS + 1);
     assert.equal(res.status, 404);
     assert.equal(res.headers.get('x-robots-tag'), 'noindex');
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+  });
+
+  it('does not throw on a Location header that will not parse', async () => {
+    const res = await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/countries/iran.md'),
+      '/countries/iran.md',
+      async () => new Response(null, { status: 308, headers: { location: 'http://[' } }),
+    );
+
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('x-robots-tag'), 'noindex');
+    assert.match(await res.text(), /redirects to/);
+  });
+
+  it('serves a body sitting exactly on the byte cap', async () => {
+    const body = `# Cap\n${'x'.repeat(MAX_TWIN_BYTES - '# Cap\n'.length)}`;
+    assert.equal(new TextEncoder().encode(body).byteLength, MAX_TWIN_BYTES);
+
+    const res = await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/cap.md'),
+      '/cap.md',
+      async () =>
+        new Response(body, {
+          headers: { 'content-type': 'text/markdown', 'content-length': String(MAX_TWIN_BYTES) },
+        }),
+    );
+
+    assert.equal(res.status, 200);
+    assert.match(await res.text(), /^# Cap/m);
   });
 
   // Asking the sibling for markdown means whole documents come back, not
@@ -490,6 +554,85 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
     assert.match(await res.text(), /^# Sources/m);
   });
 
+  // The sibling's negotiated markdown carries front matter of its own and no
+  // canonical. Before the fix `withMarkdownMetadata` returned any `---`-led
+  // document untouched, so exactly where documents became real, the body
+  // stopped naming the page it represents.
+  it('sets the canonical in front matter the origin already wrote', async () => {
+    const negotiated = '---\ndescription: Iran CII is 60/100.\ntitle: Iran\nimage: /og.png\n---\n\n# Iran\n';
+    const { fetchImpl } = corpusOrigin({ trailingSlashBody: negotiated });
+    const res = await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/api/md-twin?path=countries%2Firan'),
+      '/countries/iran.md',
+      fetchImpl,
+    );
+
+    const block = (await res.text()).match(/^---\n([\s\S]*?)\n---\n/);
+    assert.ok(block, 'the negotiated document must still carry front matter');
+    assert.deepEqual(load(block[1]), {
+      description: 'Iran CII is 60/100.',
+      title: 'Iran',
+      image: '/og.png',
+      canonical: 'https://www.worldmonitor.app/countries/iran/',
+    });
+  });
+
+  it('replaces a stale canonical rather than emitting the key twice', async () => {
+    const stale = '---\ntitle: Iran\ncanonical: "https://www.worldmonitor.app/countries/iran.md"\n---\n\n# Iran\n';
+    const { fetchImpl } = corpusOrigin({ trailingSlashBody: stale });
+    const res = await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/api/md-twin?path=countries%2Firan'),
+      '/countries/iran.md',
+      fetchImpl,
+    );
+
+    const document = await res.text();
+    const block = document.match(/^---\n([\s\S]*?)\n---\n/);
+    assert.deepEqual(load(block[1]), {
+      title: 'Iran',
+      canonical: 'https://www.worldmonitor.app/countries/iran/',
+    });
+    assert.equal(document.match(/^canonical:/gm)?.length, 1);
+  });
+
+  // One deadline for the chain, not one per hop: a fresh timeout inside the
+  // loop multiplies the budget by the hop count, so slow-but-passing hops can
+  // outlive the edge function itself.
+  it('spends a single deadline across every redirect hop', async () => {
+    const signals = [];
+    await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/countries/iran.md'),
+      '/countries/iran.md',
+      async (input, init) => {
+        signals.push(init?.signal);
+        return new URL(String(input)).pathname.endsWith('/')
+          ? new Response('# Iran\n', { headers: { 'content-type': 'text/markdown' } })
+          : new Response(null, { status: 308, headers: { location: '/countries/iran/' } });
+      },
+    );
+
+    assert.equal(signals.length, 2, 'expected one redirect hop plus the resolved fetch');
+    assert.ok(signals[0], 'each hop must carry an abort signal');
+    assert.equal(signals[0], signals[1], 'every hop must share one deadline');
+  });
+
+  it('follows a redirect for HEAD without reading a body', async () => {
+    const res = await buildMarkdownTwinResponse(
+      new Request('https://www.worldmonitor.app/countries/iran.md', { method: 'HEAD' }),
+      '/countries/iran.md',
+      async (input, init) => {
+        assert.equal(init?.method, 'HEAD');
+        return new URL(String(input)).pathname.endsWith('/')
+          ? new Response(null, { status: 200, headers: { 'content-type': 'text/markdown' } })
+          : new Response(null, { status: 308, headers: { location: '/countries/iran/' } });
+      },
+    );
+
+    assert.equal(res.status, 200);
+    assert.equal(await res.text(), '');
+    assert.match(res.headers.get('link') ?? '', /<https:\/\/www\.worldmonitor\.app\/countries\/iran\/>; rel="canonical"/);
+  });
+
   it('keeps documenting a cross-origin redirect but marks it noindex', async () => {
     const res = await buildMarkdownTwinResponse(
       new Request('https://www.worldmonitor.app/api/download.md'),
@@ -503,6 +646,11 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
 
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('x-robots-tag'), 'noindex');
-    assert.match(await res.text(), /github\.com\/koala73\/worldmonitor\/releases\/latest/);
+    // A redirect notice represents no page, so it names no canonical in either
+    // half — `noindex` alongside a canonical would be two contradictory claims.
+    assert.doesNotMatch(res.headers.get('link') ?? '', /rel="canonical"/);
+    const body = await res.text();
+    assert.doesNotMatch(body, /^canonical:/m);
+    assert.match(body, /github\.com\/koala73\/worldmonitor\/releases\/latest/);
   });
 });
