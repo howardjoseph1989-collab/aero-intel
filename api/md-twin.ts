@@ -3,8 +3,14 @@
  *
  * Vercel afterFiles rewrites unmatched `/{page}.md` (except static files,
  * /docs/*, /index.md, and /api/*) here. The handler fetches the sibling page
- * and returns heading-led text/markdown so agent-readiness scanners that
- * probe arbitrary content URLs get a .md twin, not a JSON/HTML 404.
+ * and returns its markdown, so agent-readiness scanners that probe content
+ * URLs get a real .md twin rather than a JSON/HTML body.
+ *
+ * The rewrite's path space is unbounded, so the twin only ever mirrors what
+ * the sibling actually answers: a path with no page behind it returns the
+ * origin's 404, and no twin canonicalises to itself. Returning cheap,
+ * cacheable, self-canonical 200 stubs for invented paths made this route a
+ * soft-404 farm against an already-binding crawl budget (#7860).
  */
 
 import {

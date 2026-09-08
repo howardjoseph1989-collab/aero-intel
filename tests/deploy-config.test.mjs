@@ -3716,6 +3716,13 @@ describe('agent readiness: generic markdown URL-fallback rewrite', () => {
     assert.equal(shadow, undefined, 'do not add /api/:path* → /api/not-found; it shadows [rpc].ts gateways (#4724)');
   });
 
+  // The rewrite is deliberate, but it opens an unbounded `.md` space: any path
+  // ending `.md` outside /api/ lands on the generator. What keeps that space
+  // from becoming a soft-404 farm is the handler contract — a path with no
+  // page behind it must answer 404 with X-Robots-Tag: noindex, and no twin may
+  // ever canonicalise to itself. That contract is asserted in
+  // tests/md-url-twin.test.mjs ('api/md-twin.ts soft-404 farm (#7860)');
+  // widening this rewrite without re-reading it reopens #7860.
   it('sends content-page .md twins to the generator, not the dashboard shell', () => {
     assert.equal(firstRewriteFor({ host: 'www.worldmonitor.app', path: '/dashboard.md' })?.destination, '/api/md-twin?path=:mdPath');
     assert.equal(firstRewriteFor({ host: 'www.worldmonitor.app', path: '/stocks/AAPL.md' })?.destination, '/api/md-twin?path=:mdPath');

@@ -5,6 +5,13 @@
  * text/markdown (or a heading-led non-HTML body). Static files under public/
  * win. Everything else is generated from the sibling URL.
  *
+ * The twin mirrors the sibling and never invents a page. It asks the origin
+ * for `text/markdown`, follows same-origin redirects to whatever finally
+ * answers, and reports that response's status. A path with no page behind it
+ * therefore 404s. Only a served document gets a canonical, and it points at
+ * the sibling — never at the `.md` URL, which would set a stub competing with
+ * the page it summarises (#7860).
+ *
  * Loop-prevention: sibling fetches send x-wm-md-twin so a .md handler never
  * fetches another .md handler.
  */
@@ -14,10 +21,35 @@ import { getPublicCorsHeaders } from './_cors.js';
 import { appendDeprecationPolicyLinkToRecord, DEPRECATION_POLICY_LINK } from '../server/_shared/deprecation-policy';
 
 export const MD_TWIN_LOOP_HEADER = 'x-wm-md-twin';
-const MAX_TWIN_CHARS = 80_000;
-const MAX_TWIN_BYTES = 80_000;
+/**
+ * The ceiling has to clear the real corpus, not just the old stubs. Once the
+ * twin asks for `text/markdown` (#7860) it receives whole documents: measured
+ * across all 273 sitemap URLs on 2026-09-08 the largest is `/sources/` at
+ * 132,497 bytes, then `/countries/` at 105,932. At the previous 80 KB cap both
+ * would have answered 502 where they used to answer a stub. 256 KB keeps ~2x
+ * headroom over the largest page while still bounding what the edge buffers.
+ */
+export const MAX_TWIN_BYTES = 256_000;
+const MAX_TWIN_CHARS = MAX_TWIN_BYTES;
 const SIBLING_FETCH_TIMEOUT_MS = 8_000;
 const SIBLING_USER_AGENT = 'WorldMonitor-MarkdownTwin/1.0';
+/**
+ * `text/markdown` leads because the origin negotiates a real markdown variant
+ * of every corpus page under that Accept; the rest are the fallbacks the
+ * converters below can still turn into a heading-led document (#7860).
+ */
+const SIBLING_ACCEPT =
+  'text/markdown, text/html;q=0.9, application/json;q=0.8, text/plain;q=0.7, */*;q=0.1';
+/**
+ * Vercel's `/:mdPath((?!api/).+).md` rewrite injects these. They are routing
+ * artifacts, never caller intent, so they must not reach the sibling.
+ */
+const REWRITE_SYNTHETIC_PARAMS = ['path', 'mdPath'] as const;
+/**
+ * Corpus pages answer 308 from `/x` to `/x/`. Following that hop is what turns
+ * a soft-404 stub into the real document — or into the origin's honest 404.
+ */
+const MAX_SIBLING_REDIRECTS = 3;
 const FORWARDED_RESPONSE_HEADERS = [
   'allow',
   'location',
@@ -145,8 +177,21 @@ function withMarkdownMetadata(markdown: string, canonical: string): string {
   return `---\ntitle: ${JSON.stringify(title)}\ncanonical: ${JSON.stringify(canonical)}\n---\n\n${markdown}`;
 }
 
-function markdownHeaders(req: Request, markdownPath: string, extra: Record<string, string> = {}): Record<string, string> {
-  const origin = new URL(req.url).origin;
+/**
+ * `canonical` is the HTML sibling the twin represents, or null when the twin
+ * has no document behind it. A twin never canonicalises to itself: a 248-byte
+ * `.md` stub claiming to be the canonical representation of a country page is
+ * exactly what made this route a soft-404 farm (#7860). Pass null for anything
+ * that is not a served document; those responses carry `X-Robots-Tag: noindex`
+ * instead, so an unbounded `.md` space costs no crawl budget.
+ */
+function markdownHeaders(
+  canonical: string | null,
+  extra: Record<string, string> = {},
+): Record<string, string> {
+  const links = canonical
+    ? `<${canonical}>; rel="canonical", ${DEPRECATION_POLICY_LINK}`
+    : DEPRECATION_POLICY_LINK;
   return {
     'Content-Type': 'text/markdown; charset=utf-8',
     'X-Content-Type-Options': 'nosniff',
@@ -157,9 +202,30 @@ function markdownHeaders(req: Request, markdownPath: string, extra: Record<strin
     // no other variance needs declaring.
     Vary: MD_TWIN_LOOP_HEADER,
     ...getPublicCorsHeaders('GET, HEAD, OPTIONS'),
-    Link: `<${origin}${markdownPath}>; rel="canonical", ${DEPRECATION_POLICY_LINK}`,
+    Link: links,
     ...extra,
   };
+}
+
+/** Headers for a twin with no indexable document behind it. */
+function nonDocumentHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return markdownHeaders(null, { 'X-Robots-Tag': 'noindex', ...extra });
+}
+
+/**
+ * The sibling URL to fetch, with the rewrite's synthetic params removed. A
+ * caller's own query string still rides along — `/countries/iran.md?window=7d`
+ * must reach the same page state the HTML request would.
+ */
+function siblingRequestUrl(req: Request, sibling: string): URL {
+  const requestUrl = new URL(req.url);
+  const search = new URLSearchParams(requestUrl.search);
+  if (requestUrl.pathname === '/api/md-twin' || requestUrl.pathname === '/api/md-twin/') {
+    for (const name of REWRITE_SYNTHETIC_PARAMS) search.delete(name);
+  }
+  const siblingUrl = new URL(sibling, req.url);
+  siblingUrl.search = search.toString();
+  return siblingUrl;
 }
 
 function headingFromPath(pathname: string): string {
@@ -238,14 +304,14 @@ export async function buildMarkdownTwinResponse(
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return new Response('# Method not allowed\n', {
       status: 405,
-      headers: markdownHeaders(req, markdownPath, { Allow: 'GET, HEAD, OPTIONS' }),
+      headers: nonDocumentHeaders({ Allow: 'GET, HEAD, OPTIONS' }),
     });
   }
 
   if (req.headers.get(MD_TWIN_LOOP_HEADER) === '1') {
     return new Response('# Not found\n', {
       status: 404,
-      headers: markdownHeaders(req, markdownPath, { 'Cache-Control': 'no-store' }),
+      headers: nonDocumentHeaders({ 'Cache-Control': 'no-store' }),
     });
   }
 
@@ -253,60 +319,96 @@ export async function buildMarkdownTwinResponse(
   if (!sibling) {
     return new Response('# Not found\n', {
       status: 404,
-      headers: markdownHeaders(req, markdownPath, { 'Cache-Control': 'no-store' }),
+      headers: nonDocumentHeaders({ 'Cache-Control': 'no-store' }),
     });
   }
-
-  const siblingUrl = new URL(sibling, req.url);
-  siblingUrl.search = new URL(req.url).search;
 
   const outbound = new Headers();
   outbound.set('user-agent', SIBLING_USER_AGENT);
   outbound.set(MD_TWIN_LOOP_HEADER, '1');
-  outbound.set('accept', 'text/html, application/json;q=0.9, text/plain;q=0.8, */*;q=0.1');
+  outbound.set('accept', SIBLING_ACCEPT);
 
+  // Resolve the sibling by hand rather than with `redirect: 'follow'` so a
+  // cross-origin hop stays a document instead of being fetched, and so the
+  // canonical tracks the URL that actually answered.
+  let siblingUrl = siblingRequestUrl(req, sibling);
   let siblingRes: Response;
-  try {
-    siblingRes = await fetchImpl(siblingUrl, {
-      method: req.method,
-      headers: outbound,
-      redirect: 'manual',
-      signal: AbortSignal.timeout(SIBLING_FETCH_TIMEOUT_MS),
-    });
-  } catch {
-    return new Response(`# ${headingFromPath(sibling)}\n\nThe sibling page at \`${sibling}\` could not be fetched.\n`, {
-      status: 502,
-      headers: markdownHeaders(req, markdownPath, { 'Cache-Control': 'no-store' }),
-    });
+  let followed = 0;
+  for (;;) {
+    try {
+      siblingRes = await fetchImpl(siblingUrl, {
+        method: req.method,
+        headers: outbound,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(SIBLING_FETCH_TIMEOUT_MS),
+      });
+    } catch {
+      return new Response(
+        `# ${headingFromPath(sibling)}\n\nThe sibling page at \`${sibling}\` could not be fetched.\n`,
+        { status: 502, headers: nonDocumentHeaders({ 'Cache-Control': 'no-store' }) },
+      );
+    }
+
+    const location = siblingRes.headers.get('location');
+    if (siblingRes.status < 300 || siblingRes.status >= 400 || !location) break;
+
+    let target: URL | null = null;
+    try {
+      target = new URL(location, siblingUrl);
+    } catch {
+      target = null;
+    }
+
+    // A cross-origin hop is the destination, not a step towards one — the twin
+    // documents it rather than fetching another site on the caller's behalf.
+    if (!target || target.origin !== siblingUrl.origin) {
+      void siblingRes.body?.cancel().catch(() => {});
+      const body = `# ${headingFromPath(sibling)}\n\nThis resource redirects to [${location}](${location}).\n`;
+      const canonical = new URL(sibling, req.url).href;
+      return new Response(req.method === 'HEAD' ? null : withMarkdownMetadata(body, canonical), {
+        status: 200,
+        headers: markdownHeaders(canonical, { 'X-Robots-Tag': 'noindex' }),
+      });
+    }
+
+    if (followed >= MAX_SIBLING_REDIRECTS) {
+      // An unresolvable chain has no document behind it. Answering 404 keeps
+      // the `.md` space bounded instead of minting another cacheable 200.
+      void siblingRes.body?.cancel().catch(() => {});
+      return new Response(`# ${headingFromPath(sibling)}\n\nNot found.\n`, {
+        status: 404,
+        headers: nonDocumentHeaders({ 'Cache-Control': 'no-store' }),
+      });
+    }
+
+    void siblingRes.body?.cancel().catch(() => {});
+    siblingUrl = target;
+    followed += 1;
   }
 
-  const location = siblingRes.headers.get('location');
-  if (siblingRes.status >= 300 && siblingRes.status < 400 && location) {
-    const body = `# ${headingFromPath(sibling)}\n\nThis resource redirects to [${location}](${location}).\n`;
-    return new Response(req.method === 'HEAD' ? null : withMarkdownMetadata(body, new URL(markdownPath, req.url).href), {
-      status: 200,
-      headers: markdownHeaders(req, markdownPath),
-    });
-  }
-
+  // Whatever finally answered is the page this twin represents, so it — never
+  // the `.md` URL — is the canonical (#7860).
+  const canonical = new URL(siblingUrl.pathname, req.url).href;
   const isFailure = !siblingRes.ok;
   const siblingStatus = isFailure ? siblingRes.status : 200;
   const responseHeaders: Record<string, string> = {
-    ...(isFailure ? { 'Cache-Control': 'no-store' } : {}),
+    ...(isFailure ? { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } : {}),
     ...forwardedResponseHeaders(siblingRes),
   };
+  const documentHeaders = (extra: Record<string, string>) =>
+    isFailure ? nonDocumentHeaders(extra) : markdownHeaders(canonical, extra);
 
   if (req.method === 'HEAD') {
     return new Response(null, {
       status: siblingStatus,
-      headers: markdownHeaders(req, markdownPath, responseHeaders),
+      headers: documentHeaders(responseHeaders),
     });
   }
 
   if (siblingStatus === 304) {
     return new Response(null, {
       status: siblingStatus,
-      headers: markdownHeaders(req, markdownPath, responseHeaders),
+      headers: documentHeaders(responseHeaders),
     });
   }
 
@@ -334,12 +436,12 @@ export async function buildMarkdownTwinResponse(
   } catch {
     return new Response(`# ${heading}\n\nThe sibling page at \`${sibling}\` could not be read.\n`, {
       status: 502,
-      headers: markdownHeaders(req, markdownPath, { 'Cache-Control': 'no-store' }),
+      headers: nonDocumentHeaders({ 'Cache-Control': 'no-store' }),
     });
   }
 
-  return new Response(withMarkdownMetadata(markdown, new URL(markdownPath, req.url).href), {
+  return new Response(withMarkdownMetadata(markdown, canonical), {
     status: siblingStatus,
-    headers: markdownHeaders(req, markdownPath, responseHeaders),
+    headers: documentHeaders(responseHeaders),
   });
 }
