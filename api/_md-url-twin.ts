@@ -25,11 +25,18 @@ import { appendDeprecationPolicyLinkToRecord, DEPRECATION_POLICY_LINK } from '..
 export const MD_TWIN_LOOP_HEADER = 'x-wm-md-twin';
 /**
  * The ceiling has to clear the real corpus, not just the old stubs. Once the
- * twin asks for `text/markdown` (#7860) it receives whole documents: measured
- * across all 273 sitemap URLs on 2026-09-08 the largest is `/sources/` at
+ * twin asks for `text/markdown` (#7860) it receives whole documents: sweeping
+ * all 273 sitemap URLs on 2026-09-08, the largest page is `/sources/` at
  * 132,497 bytes, then `/countries/` at 105,932. At the previous 80 KB cap both
  * would have answered 502 where they used to answer a stub. 256 KB keeps ~2x
  * headroom over the largest page while still bounding what the edge buffers.
+ *
+ * One sitemap URL is larger and stays over the cap: `/llms-full.txt` (264,615
+ * bytes), whose twin therefore answers 502. That is deliberate, not an
+ * oversight — it is a plain-text agent file that is already its own best
+ * representation, so a markdown twin of it is redundant, and it was over the
+ * previous cap too. Raising the ceiling to buffer it would cost every request
+ * headroom to serve one URL nobody needs.
  */
 export const MAX_TWIN_BYTES = 256_000;
 const MAX_TWIN_CHARS = MAX_TWIN_BYTES;

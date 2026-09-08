@@ -536,9 +536,11 @@ describe('api/md-twin.ts soft-404 farm (#7860)', () => {
   });
 
   // Asking the sibling for markdown means whole documents come back, not
-  // 248-byte stubs. `/sources/` is the largest page in the sitemap — measured
-  // at 132,497 bytes on 2026-09-08 — and it must survive the twin's byte cap,
-  // or the fix trades a soft 200 for a hard 502 on the biggest corpus pages.
+  // 248-byte stubs. `/sources/` is the largest corpus *page* in the sitemap —
+  // measured at 132,497 bytes on 2026-09-08 — and it must survive the twin's
+  // byte cap, or the fix trades a soft 200 for a hard 502 on the biggest
+  // pages. (`/llms-full.txt` is larger still and stays a deliberate 502; see
+  // the MAX_TWIN_BYTES comment.)
   it('serves the largest real corpus page rather than rejecting it as oversized', async () => {
     const sourcesMarkdown = `# Sources\n\n${'World Monitor tracks this source. '.repeat(4_000)}`;
     assert.ok(sourcesMarkdown.length > 132_497, 'fixture must be at least as large as the live /sources/ page');
