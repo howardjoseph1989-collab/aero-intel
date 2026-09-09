@@ -30,12 +30,26 @@ function extractBlock(css: string, blockStart: string): string {
   assert.fail(`unclosed theme block: ${blockStart}`);
 }
 
-/** Extract the first `--name: #hex` inside the brace-bounded `blockStart` rule. */
+/** Solid hex equivalent of a theme color (`#rgb`, `#rrggbb`, or `rgb`/`rgba`). */
+function parseThemeColor(raw: string): string | null {
+  const value = raw.trim();
+  const hex = value.match(/^(#[0-9a-fA-F]{3,8})\b/);
+  if (hex) return hex[1]!;
+  const rgb = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (!rgb) return null;
+  return `#${[rgb[1], rgb[2], rgb[3]]
+    .map((channel) => Number(channel).toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+/** Extract the first `--name` color inside the brace-bounded `blockStart` rule. */
 function token(css: string, blockStart: string, name: string): string {
   const slice = extractBlock(css, blockStart);
-  const m = slice.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{3,8})`));
+  const m = slice.match(new RegExp(`${name}:\\s*([^;]+)`));
   assert.ok(m, `${name} not found in block ${blockStart}`);
-  return m![1]!;
+  const parsed = parseThemeColor(m[1]!);
+  assert.ok(parsed, `${name} must be a hex or rgb/rgba color in block ${blockStart}`);
+  return parsed;
 }
 
 describe('contrast util', () => {
