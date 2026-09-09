@@ -3102,9 +3102,9 @@ export function formatCrawlableIntelBrief(text, countryName) {
       out.push(`          <h3>${escapeHtml(heading)}</h3>`);
       continue;
     }
-    if (/^(?:[•\-]\s*|\*\s+)/.test(trimmed)) {
+    if (/^(?:[•-]\s*|\*\s+)/.test(trimmed)) {
       openList();
-      const item = applyCrawlableBriefEmphasis(escapeHtml(trimmed.replace(/^(?:[•\-]\s*|\*\s+)/, '')));
+      const item = applyCrawlableBriefEmphasis(escapeHtml(trimmed.replace(/^(?:[•-]\s*|\*\s+)/, '')));
       out.push(`            <li>${item}</li>`);
       continue;
     }
@@ -3321,7 +3321,7 @@ export function assertCountryDevelopmentsRendered({
       .map((line) => unwrapBriefEmphasisLine(line.trim()))
       .filter(Boolean)
       .filter((line) => !isBriefSectionHeader(line, { countryCode, countryName }))
-      .map((line) => line.replace(/^(?:[•\-]\s*|\*\s+)/, '').replace(/\*\*/g, ''));
+      .map((line) => line.replace(/^(?:[•-]\s*|\*\s+)/, '').replace(/\*\*/g, ''));
     const anchors = [contentLines[0], contentLines.at(-1)]
       .filter((line, index, all) => line && all.indexOf(line) === index)
       .map((line) => escapeHtml(line.slice(0, 120)));

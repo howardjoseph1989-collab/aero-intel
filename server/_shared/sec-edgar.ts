@@ -166,7 +166,7 @@ export function padCik(cik: number | string): string {
 
 export function sanitizeTicker(raw: string): string {
   const t = (raw ?? '').trim().toUpperCase();
-  return /^[A-Z][A-Z0-9.\-]{0,9}$/.test(t) ? t : '';
+  return /^[A-Z][A-Z0-9.-]{0,9}$/.test(t) ? t : '';
 }
 
 // Filing index page on sec.gov, e.g.
@@ -486,7 +486,7 @@ export interface EdgarSearchResult {
 // Requires at least one alphanumeric form token so "," / spaces-only cannot
 // pass the regex then normalize to an empty (unfiltered) query.
 const EDGAR_ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-export const EDGAR_FORMS_RE = /^(?=[A-Za-z0-9/, .\-]{1,40}$)(?=.*[A-Za-z0-9])[A-Za-z0-9/, .\-]+$/;
+export const EDGAR_FORMS_RE = /^(?=[A-Za-z0-9/, .-]{1,40}$)(?=.*[A-Za-z0-9])[A-Za-z0-9/, .-]+$/;
 
 /** Shape plus calendar validity; Date.parse alone would normalize invalid days. */
 export function isEdgarIsoDate(value: string): boolean {

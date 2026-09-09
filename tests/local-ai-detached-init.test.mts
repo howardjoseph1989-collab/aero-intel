@@ -30,7 +30,7 @@ describe('optional local-AI init stays off the dashboard critical path (#7779)',
     );
     assert.doesNotMatch(
       src,
-      /\n    await mlWorker\.init\(\);/,
+      /\n {4}await mlWorker\.init\(\);/,
       'boot must never await mlWorker.init() at the init() statement level',
     );
   });

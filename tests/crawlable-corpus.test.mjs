@@ -6691,7 +6691,7 @@ describe('GEO residue #7616 (U2a citations and prose)', () => {
   it('keeps internal issue numbers out of rendered corpus prose', () => {
     assert.doesNotMatch(
       repo('scripts/build-use-cases.mjs'),
-      /Canonical treatment \(\#\d+\)/,
+      /Canonical treatment \(#\d+\)/,
       'the verify-news canonical note must not leak its internal issue number',
     );
     assert.match(

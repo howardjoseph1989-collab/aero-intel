@@ -9,6 +9,7 @@ import {
 } from '@/config/live-video-stations';
 import { NEWS_HIERARCHY } from '@/config/product';
 import { sanitizeUrl } from '@/utils/sanitize';
+import { safeStorageGet, safeStorageSet } from '@/utils/safe-storage';
 
 const STORAGE_KEY = 'aero-intel-live-station';
 
@@ -68,7 +69,7 @@ export class LiveVideoStrip {
       if (station.optional) chip.dataset.optional = 'true';
       chip.addEventListener('click', () => {
         this.activeId = station.id;
-        try { localStorage.setItem(STORAGE_KEY, station.id); } catch { /* ignore */ }
+        safeStorageSet(STORAGE_KEY, station.id);
         this.syncChipState();
         void this.loadStation(station.id);
       });
@@ -84,11 +85,7 @@ export class LiveVideoStrip {
   }
 
   private readSavedStation(): string | null {
-    try {
-      return localStorage.getItem(STORAGE_KEY);
-    } catch {
-      return null;
-    }
+    return safeStorageGet(STORAGE_KEY);
   }
 
   private syncChipState(): void {

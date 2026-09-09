@@ -76,12 +76,12 @@ function installFixture(fixture: GeoFixture): { getPositionCalls: () => number }
   }
   const tz = fixture.timezone ?? 'UTC';
   const dtf = Intl.DateTimeFormat;
-  (Intl as Record<string, unknown>).DateTimeFormat = function (...args: unknown[]) {
+  (Intl as Record<string, unknown>).DateTimeFormat = ((...args: unknown[]) => {
     const fmt = new (dtf as new (...a: unknown[]) => { resolvedOptions: () => { timeZone?: string } })(...args);
     const orig = fmt.resolvedOptions.bind(fmt);
     fmt.resolvedOptions = () => ({ ...orig(), timeZone: tz });
     return fmt;
-  } as unknown as typeof Intl.DateTimeFormat;
+  }) as unknown as typeof Intl.DateTimeFormat;
 
   return state;
 }

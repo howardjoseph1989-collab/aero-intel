@@ -192,7 +192,7 @@ function loadResilienceCacheKeys() {
     'utf8',
   ).then((sourceText) => {
     function exportedString(name) {
-      const match = sourceText.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*['\"]([^'\"]+)['\"]`));
+      const match = sourceText.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*['"]([^'"]+)['"]`));
       if (!match) throw new Error(`Could not read ${name} from resilience _shared.ts`);
       return match[1];
     }
