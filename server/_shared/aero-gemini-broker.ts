@@ -138,7 +138,7 @@ export function toGeminiFunctionDeclarations(tools: GeminiToolSpec[]): GeminiFun
 }
 
 function isAllowedAudioType(mimeType: string): boolean {
-  const base = String(mimeType || '').split(';')[0].trim().toLowerCase();
+  const base = (String(mimeType || '').split(';')[0] ?? '').trim().toLowerCase();
   return (GEMINI_ALLOWED_AUDIO_TYPES as readonly string[]).includes(base);
 }
 
@@ -182,7 +182,7 @@ export function parseGeminiTurnBody(raw: unknown):
     : [];
 
   const audio = typeof body.audio === 'string' ? body.audio.replace(/\s+/g, '') : '';
-  const mimeType = String(body.mimeType || 'audio/webm').split(';')[0].trim().toLowerCase();
+  const mimeType = (String(body.mimeType || 'audio/webm').split(';')[0] ?? 'audio/webm').trim().toLowerCase();
 
   if (toolResults.length) {
     return {
@@ -454,9 +454,10 @@ export async function runGeminiTurn({
     audioMimeType: null,
   };
 
-  const shouldSpeak = (speak || parsed.turn.speak) && extracted.text && !extracted.functionCalls.length;
-  if (shouldSpeak) {
-    const ttsRequest = buildGeminiTtsRequest(extracted.text);
+  const spokenText = extracted.text;
+  const shouldSpeak = Boolean((speak || parsed.turn.speak) && spokenText && !extracted.functionCalls.length);
+  if (shouldSpeak && spokenText) {
+    const ttsRequest = buildGeminiTtsRequest(spokenText);
     if (ttsRequest) {
       try {
         const tts = await doFetch(buildGeminiGenerateUrl(models.tts, apiKey), {

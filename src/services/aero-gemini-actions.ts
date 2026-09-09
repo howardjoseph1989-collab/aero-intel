@@ -13,7 +13,7 @@ export const AERO_INTEL_MAP_HEIGHT_EVENT = 'aero-intel:map-height';
 type GeminiExecutor = (
   args: Record<string, unknown>,
   extra?: { signal?: AbortSignal },
-) => Promise<unknown>;
+) => Promise<unknown> | unknown;
 
 const webMcpExecutors = new Map<string, GeminiExecutor>();
 

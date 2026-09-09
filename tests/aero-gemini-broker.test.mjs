@@ -58,7 +58,8 @@ describe('AERO GEMINI broker', () => {
   it('instructions name AERO INTEL and cover dashboard tools', () => {
     const text = aeroIntelVoiceInstructions();
     assert.match(text, /AERO INTEL/);
-    assert.doesNotMatch(text, /World Monitor/);
+    assert.match(text, /Product name is always AERO INTEL/);
+    assert.doesNotMatch(text, /You are World Monitor/i);
     assert.match(text, /get_news_brief/);
     assert.ok(AERO_GEMINI_TOOL_SPECS.some((tool) => tool.name === 'set_webcam_view'));
     assert.ok(AERO_GEMINI_TOOL_SPECS.some((tool) => tool.name === 'set_global_situation_height'));

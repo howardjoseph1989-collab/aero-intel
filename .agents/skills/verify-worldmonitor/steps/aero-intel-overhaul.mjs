@@ -71,11 +71,14 @@ export default async function ({ page, base, shot, log, expectVisible }) {
     els.map((el) => el.getAttribute('data-feed-id') || el.dataset.feedId || el.textContent || '').join(' ')
   ));
   log('webcam wall', gridIds);
+  await shot('webcams-iss-first');
 
   const briefing = page.locator('#newsBriefingSurface');
   await expectVisible('#newsBriefingSurface');
+  await briefing.scrollIntoViewIfNeeded();
   const briefingUs = await briefing.locator('.news-hierarchy-chip.active').textContent();
   log('briefing chip', briefingUs);
+  await shot('us-first-briefing');
 
   const mapBelow = await page.evaluate(() => {
     const map = document.getElementById('mapSection')?.getBoundingClientRect();

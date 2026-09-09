@@ -22,6 +22,10 @@ describe('map split layout (#6417)', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value });
   }
 
+  function stubInnerHeight(value: number): void {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value });
+  }
+
   function buildSplitDom(totalWidth: number): { main: HTMLElement; handle: HTMLElement } {
     const main = document.createElement('main');
     main.className = 'main-content';
@@ -55,6 +59,7 @@ describe('map split layout (#6417)', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.replaceChildren();
+    stubInnerHeight(1200);
     resize = vi.fn();
     manager = new EventHandlerManager({
       container: document.createElement('div'),
@@ -667,7 +672,7 @@ describe('map split layout (#6417)', () => {
       stubInnerWidth(2000);
       localStorage.setItem('map-split-height', '600px');
       localStorage.setItem('map-height', '400px');
-      const { section, handle } = buildHeightDom();
+      const { section, container, handle } = buildHeightDom();
       manager.setupMapResize();
 
       handle.dispatchEvent(new MouseEvent('mousedown', { clientY: 0, bubbles: true }));

@@ -10,6 +10,7 @@
 
 export const config = { runtime: 'edge', regions: ['iad1', 'lhr1', 'fra1', 'sfo1'] };
 
+// @ts-expect-error — JS module, no declaration file
 import { getCorsHeaders, isDisallowedOrigin } from './_cors.js';
 import { CHROME_UA } from '../server/_shared/constants';
 import {
