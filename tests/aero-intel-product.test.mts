@@ -31,9 +31,11 @@ describe('AERO INTEL product identity', () => {
     assert.match(pkg.description, /AERO INTEL/);
     const html = read('index.html');
     assert.match(html, /<title>AERO INTEL/);
+    assert.match(html, /<h1 class="app-heading">AERO INTEL — Personal Live Intelligence Dashboard<\/h1>/);
     assert.match(html, /application-name" content="AERO INTEL"/);
     assert.match(html, /og:site_name" content="AERO INTEL"/);
     assert.doesNotMatch(html, /<title>World Monitor/);
+    assert.doesNotMatch(html, /<h1 class="app-heading">World Monitor/);
     const readme = read('README.md');
     assert.match(readme, /^# AERO INTEL/m);
     assert.match(readme, /koala73\/worldmonitor/);

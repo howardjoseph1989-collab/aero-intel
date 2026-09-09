@@ -25,7 +25,7 @@ const fixture = `<!doctype html>
     <link rel="canonical" href="${FULL.url}" />
     <link rel="alternate" hreflang="x-default" href="${FULL.url}" />
     <link rel="alternate" hreflang="en" href="${FULL.url}" />
-    <meta name="application-name" content="World Monitor" />
+    <meta name="application-name" content="${FULL.siteName}" />
     <meta name="subject" content="${FULL.subject}" />
     <meta name="classification" content="${FULL.classification}" />
     <meta property="og:url" content="${FULL.url}" />
@@ -33,7 +33,7 @@ const fixture = `<!doctype html>
     <meta property="og:description" content="${FULL.description}" />
     <meta property="og:image" content="https://www.worldmonitor.app/favico/og-image.png" />
     <meta property="og:image:width" content="1200" />
-    <meta property="og:site_name" content="World Monitor" />
+    <meta property="og:site_name" content="${FULL.siteName}" />
     <meta name="twitter:url" content="${FULL.url}" />
     <meta name="twitter:title" content="${FULL.title}" />
     <meta name="twitter:description" content="${FULL.description}" />
@@ -43,8 +43,8 @@ const fixture = `<!doctype html>
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "@id": "https://www.worldmonitor.app/#software",
-      "name": "World Monitor",
-      "alternateName": ["WorldMonitor", "World Monitor App", "WM Intelligence"],
+      "name": "${FULL.siteName}",
+      "alternateName": ["AERO INTEL", "Aero Intel"],
       "url": "${CANONICAL_ORIGIN}",
       "screenshot": "https://www.worldmonitor.app/favico/og-image.png",
       "featureList": [
@@ -60,7 +60,7 @@ const fixture = `<!doctype html>
       "@context": "https://schema.org",
       "@type": "WebSite",
       "@id": "https://www.worldmonitor.app/#website",
-      "name": "World Monitor",
+      "name": "${FULL.siteName}",
       "url": "https://www.worldmonitor.app/",
       "publisher": { "@id": "https://www.worldmonitor.app/#organization" }
     }
@@ -71,7 +71,7 @@ const fixture = `<!doctype html>
       "@type": "WebPage",
       "@id": "https://www.worldmonitor.app/dashboard#webpage",
       "url": "https://www.worldmonitor.app/dashboard",
-      "name": "World Monitor — Real-Time Global Intelligence Dashboard",
+      "name": "${FULL.title}",
       "description": "Open-source real-time global intelligence dashboard aggregating conflicts, military movements, markets, infrastructure, and geopolitical data.",
       "isPartOf": { "@id": "https://www.worldmonitor.app/#website" },
       "publisher": { "@id": "https://www.worldmonitor.app/#organization" },
@@ -92,7 +92,7 @@ const fixture = `<!doctype html>
         {
           "@type": "ListItem",
           "position": 1,
-          "name": "World Monitor",
+          "name": "${FULL.siteName}",
           "item": "https://www.worldmonitor.app/"
         },
         {
@@ -106,7 +106,7 @@ const fixture = `<!doctype html>
     </script>
   </head>
   <body>
-    <h1 class="app-heading">World Monitor — Real-Time Global Intelligence Dashboard</h1>
+    <h1 class="app-heading">${FULL.title}</h1>
     <section class="app-seo-summary">
       <p>Full dashboard SEO summary placeholder for transform tests.</p>
     </section>
@@ -114,7 +114,7 @@ const fixture = `<!doctype html>
       <main id="dashboard-noscript" class="dashboard-noscript">
         <h2>The live dashboard requires JavaScript</h2>
         <p>Full dashboard noscript placeholder.</p>
-        <nav aria-label="World Monitor references">
+        <nav aria-label="${FULL.siteName} references">
           <ul>
             <li><a href="/countries/">Country intelligence</a></li>
           </ul>

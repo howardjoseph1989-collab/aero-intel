@@ -201,10 +201,10 @@ test.describe('pre-hydration dashboard shell', () => {
       expect(preHydration.ariaBusy).toBe('true');
       expect(preHydration.appHeadingTag).toBe('H1');
       expect(preHydration.appHeadingAriaHidden).toBeNull();
-      expect(preHydration.appHeadingText).toContain('World Monitor');
+      expect(preHydration.appHeadingText).toContain('AERO INTEL');
       expect(preHydration.badgeAriaLabel).toBeNull();
       expect(preHydration.focusableCount).toBe(0);
-      expect(preHydration.shellText).toContain('World Monitor');
+      expect(preHydration.shellText).toContain('AERO INTEL');
       expect(preHydration.shellText).toContain(SHELL_LCP_TEXT);
       expect(preHydration.shellText).toContain('Primary View');
       expect(preHydration.candidateText).toBe(SHELL_LCP_TEXT);
@@ -226,7 +226,7 @@ test.describe('pre-hydration dashboard shell', () => {
 
       await expect(page.locator('.header')).toBeVisible({ timeout: 30000 });
       await expect(page.locator('.skeleton-shell')).toHaveCount(0);
-      await expect(page.locator('body > h1.app-heading')).toContainText('World Monitor');
+      await expect(page.locator('body > h1.app-heading')).toContainText('AERO INTEL');
       for (const href of [
         '/countries/',
         '/chokepoints/',
@@ -487,7 +487,7 @@ test.describe('dashboard shell without JavaScript', () => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     await expect(page.locator('.skeleton-shell')).toBeHidden();
-    await expect(page.locator('body > h1.app-heading')).toContainText('World Monitor');
+    await expect(page.locator('body > h1.app-heading')).toContainText('AERO INTEL');
     await expect(page.locator('body > h1.app-heading')).not.toHaveAttribute('aria-hidden', 'true');
     await expect(page.locator('#seo-prerender')).toHaveCount(0);
     await expect(page.locator('#dashboard-noscript')).toBeVisible();

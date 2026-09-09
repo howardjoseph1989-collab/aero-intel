@@ -1704,7 +1704,7 @@ describe('webmcp.ts: current API contract', () => {
       ok: false,
       status: 'denied',
       reason: 'target_cancellation_unsupported',
-      message: 'This browser cannot cancel work already running in the page, so World Monitor '
+      message: 'This browser cannot cancel work already running in the page, so AERO INTEL '
         + 'will not run tools whose effects can outlive cancellation. Read-only and '
         + 'reversible view-state dashboard tools still work.',
     };

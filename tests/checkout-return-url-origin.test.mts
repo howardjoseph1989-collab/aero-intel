@@ -8,7 +8,7 @@ import { isTrustedReturnUrlOrigin } from '../convex/payments/returnUrlOrigin.ts'
  * as a post-payment `returnUrl`, but the list drifted from the set of hosts that
  * actually serve the app. Vercel serves the deployment on EVERY attached domain, so
  * `https://api.worldmonitor.app/dashboard` returns the real dashboard (verified HTTP
- * 200, `<title>World Monitor - Real-Time Global Intelligence Dashboard</title>`)
+ * 200, `<title>AERO INTEL - Personal Live Intelligence Dashboard</title>`)
  * while `api.worldmonitor.app` was absent from the allowlist. 12 distinct signed-in
  * users were handed a 500 from /api/create-checkout instead of a Dodo checkout page.
  *
