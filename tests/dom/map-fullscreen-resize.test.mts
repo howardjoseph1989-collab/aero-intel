@@ -62,8 +62,8 @@ describe('map fullscreen resize synchronization', () => {
   });
 
   it('keeps the map-height separator value synchronized', () => {
-    // Pin a stacked-layout viewport: from SPLIT_LAYOUT_MIN_WIDTH up the
-    // handle resizes #mapContainer instead of the section
+    // Pin a stacked-layout viewport: below SPLIT_LAYOUT_MIN_WIDTH the
+    // handle still resizes #mapSection. Wide viewports use a bottom strip
     // (tests/dom/map-split-layout.test.mts covers that mode).
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 800 });
     const section = document.createElement('section');

@@ -1,5 +1,6 @@
-// Single source of truth for the split (map-beside-panels) dashboard layout.
-// Keep this module zero-import so tsx-run tests can load it directly.
+// Single source of truth for the wide dashboard layout (panel grid above a
+// bottom Global Situation strip). Keep this module zero-import so tsx-run
+// tests can load it directly.
 //
 // CSS media queries cannot read these constants, so the split blocks in
 // src/styles/main.css and src/styles/panels.css repeat the numbers as
@@ -7,9 +8,40 @@
 // aligned with this module. Change the values here first.
 
 /** Viewport width (CSS px) at which the dashboard switches from the stacked
- * layout (map band above the panel grid) to the split layout (map column
- * beside the panels). Shared by web and the desktop app — issue #6417. */
+ * layout to the wide layout (panel grid above a full-width Global Situation
+ * strip at the bottom). Shared by web and the desktop app — issue #6417. */
 export const SPLIT_LAYOUT_MIN_WIDTH = 900;
+
+/** Default pixel height of the bottom Global Situation strip. */
+export const MAP_STRIP_DEFAULT_PX = 280;
+
+/** Floor for the bottom Global Situation strip (still shows header + map). */
+export const MAP_STRIP_MIN_PX = 160;
+
+/** Height after dragging the handle at the top of a bottom-anchored map strip.
+ * Dragging up (negative deltaY) grows the strip. */
+export function mapBottomStripHeightFromDrag(
+  startHeight: number,
+  deltaY: number,
+  minPx: number,
+  maxPx: number,
+): number {
+  const next = startHeight - deltaY;
+  return Math.max(minPx, Math.min(next, maxPx));
+}
+
+/** Keyboard step for a bottom-anchored strip: ArrowUp grows, ArrowDown shrinks. */
+export function mapBottomStripHeightFromKeyboard(
+  currentHeight: number,
+  key: string,
+  stepPx: number,
+  minPx: number,
+  maxPx: number,
+): number {
+  const delta = key === 'ArrowUp' ? stepPx : key === 'ArrowDown' ? -stepPx : 0;
+  if (delta === 0) return currentHeight;
+  return Math.max(minPx, Math.min(currentHeight + delta, maxPx));
+}
 
 /** Former web-only split threshold. It remains only to bound migration of the
  * legacy shared map-height preference to users who could have set it while

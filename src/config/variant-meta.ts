@@ -14,7 +14,7 @@ export interface VariantMeta {
 export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
   full: {
     title: 'AERO INTEL - Personal Live Intelligence Dashboard',
-    description: 'AERO INTEL personal live intelligence: conflicts, markets, military, OSINT signals — US-first news and live video, with global layers in one view.',
+    description: 'AERO INTEL personal live intelligence: conflicts, markets, military, OSINT signals — US-first news and live video, with global layers in one dashboard view.',
     keywords: 'AI intelligence, AI-powered dashboard, global intelligence, geopolitical dashboard, world news, market data, military bases, nuclear facilities, undersea cables, conflict zones, real-time monitoring, situation awareness, OSINT, flight tracking, AIS ships, earthquake monitor, protest tracker, power outages, oil prices, government spending, polymarket predictions',
     url: 'https://www.worldmonitor.app/dashboard',
     siteName: 'AERO INTEL',

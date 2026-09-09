@@ -575,7 +575,7 @@ describe('country evidence bundle export', () => {
       }],
     }));
 
-    assert.match(markdown, /^# WorldMonitor Evidence Bundle: Norway \(NO\)/);
+    assert.match(markdown, /^# AERO INTEL Evidence Bundle: Norway \(NO\)/);
     assert.match(markdown, /## Risk Context/);
     assert.match(markdown, /## Selected Signals/);
     assert.match(markdown, /## Intelligence Brief/);

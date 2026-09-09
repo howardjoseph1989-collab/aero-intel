@@ -21,10 +21,16 @@ function cssBlock(source: string, selector: string): string {
   throw new Error(`unterminated ${selector} block`);
 }
 
+function rgbToHex(r: string, g: string, b: string): string {
+  return `#${[r, g, b].map((channel) => Number(channel).toString(16).padStart(2, '0')).join('')}`;
+}
+
 function cssVars(...blocks: string[]): Record<string, string> {
-  return Object.assign({}, ...blocks.map(block => Object.fromEntries(
-    [...block.matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{3,6})\b/g)].map(([, name, value]) => [name!, value!]),
-  )));
+  return Object.assign({}, ...blocks.map(block => Object.fromEntries([
+    ...[...block.matchAll(/(--[\w-]+):\s*(#[0-9a-fA-F]{3,6})\b/g)].map(([, name, value]) => [name!, value!]),
+    ...[...block.matchAll(/(--[\w-]+):\s*rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g)]
+      .map(([, name, r, g, b]) => [name!, rgbToHex(r!, g!, b!)]),
+  ])));
 }
 
 function rgb(hex: string): [number, number, number] {

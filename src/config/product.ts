@@ -28,5 +28,5 @@ export const NEWS_HIERARCHY: readonly NewsHierarchyEntry[] = [
   { id: 'us', label: 'US National' },
   { id: 'politics', label: 'World / International' },
   { id: 'markets', label: 'Markets' },
-  { id: 'other', label: 'Other', panelId: 'europe' },
+  { id: 'other', label: 'Other', panelId: 'gov' },
 ];

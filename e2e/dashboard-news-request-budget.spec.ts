@@ -67,7 +67,7 @@ const CUSTOM_CATEGORY_FEED_COUNT = 10;
 
 // A full-variant preset news panel that sits below the fold, so it mounts after the
 // news load rather than during it. The digest stub carries no bucket for it.
-const EMPTY_CATEGORY_PANEL = 'africa';
+const EMPTY_CATEGORY_PANEL = 'gov';
 
 type NewsRequestLog = {
   digestUrls: string[];
@@ -118,7 +118,11 @@ async function fireHydrationTrigger(page: Page): Promise<void> {
 }
 
 async function mountDeferredPanel(page: Page, panelKey: string) {
-  const panel = page.locator(`[data-panel="${panelKey}"]`);
+  const chip = page.locator(`.news-hierarchy-chip[data-briefing-target="${panelKey}"]`);
+  if (await chip.count()) {
+    await chip.click();
+  }
+  const panel = page.locator(`.panel[data-panel="${panelKey}"]`);
   await panel.scrollIntoViewIfNeeded();
   await expect(panel).toBeVisible();
   await expect(panel).not.toHaveAttribute('data-deferred-panel', 'true');
@@ -741,7 +745,7 @@ test.describe('dashboard news request budget (#5376)', () => {
     }
     await page.waitForTimeout(SECOND_LOAD_SETTLE_MS);
 
-    const panel = page.locator(`[data-panel="${EMPTY_CATEGORY_PANEL}"]`);
+    const panel = page.locator(`.panel[data-panel="${EMPTY_CATEGORY_PANEL}"]`);
     await panel.scrollIntoViewIfNeeded();
     await expect(panel).toBeVisible();
     // Give the deferred mount + backfill a moment after it enters the viewport.
@@ -816,7 +820,6 @@ const SCROLL_HYDRATION_PANEL_ORDER = [
   'politics',
   'us',
   'europe',
-  'stablecoins',
   'middleeast',
   'africa',
   'latam',
@@ -839,6 +842,7 @@ const SCROLL_HYDRATION_PANEL_ORDER = [
   'macro-signals',
   'etf-flows',
   'monitors',
+  'stablecoins',
 ];
 
 type ScrollMetrics = {

@@ -43,7 +43,7 @@ describe('AERO INTEL product identity', () => {
     assert.match(readme, /^# AERO INTEL/m);
     assert.match(readme, /koala73\/worldmonitor/);
     assert.match(readme, /AGPL/);
-    assert.match(readme, /Fox News is selected by default/);
+    assert.match(readme, /Fox News \(default\)/);
     assert.match(readme, /US Local/);
   });
 

@@ -93,7 +93,14 @@ test.describe('dashboard wide display layout', () => {
     expect(initial.scrollWidth).toBeLessThanOrEqual(initial.viewportWidth + 1);
     expect(initial.bottomHeight).toBeLessThanOrEqual(4);
     expect(initial.sectionHeight).toBeGreaterThan(100);
-    expect(initial.mapHeight).toBeGreaterThan(initial.sectionHeight * 0.85);
+    expect(initial.mapHeight).toBeGreaterThan(initial.sectionHeight * 0.55);
+    const mapBelowPanels = await page.evaluate(() => {
+      const map = document.getElementById('mapSection')?.getBoundingClientRect();
+      const grid = document.getElementById('panelsGrid')?.getBoundingClientRect();
+      if (!map || !grid) return false;
+      return map.top >= grid.top && Math.abs(map.width - document.documentElement.clientWidth) < 48;
+    });
+    expect(mapBelowPanels).toBe(true);
 
     await page.setViewportSize({ width: 1920, height: 1080 });
     await expect
@@ -105,7 +112,7 @@ test.describe('dashboard wide display layout', () => {
     expect(resized.scrollWidth).toBeLessThanOrEqual(resized.viewportWidth + 1);
     expect(resized.bottomHeight).toBeLessThanOrEqual(4);
     expect(resized.sectionHeight).toBeGreaterThan(100);
-    expect(resized.mapHeight).toBeGreaterThan(resized.sectionHeight * 0.85);
+    expect(resized.mapHeight).toBeGreaterThan(resized.sectionHeight * 0.55);
   });
 
   test('empty drop zone re-expands during an active drag and collapses again after release', async ({ page }) => {

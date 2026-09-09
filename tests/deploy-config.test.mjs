@@ -5048,7 +5048,7 @@ describe('skeleton brand text extraction (#5541)', () => {
     // Simulate raw textContent: strip all HTML tags
     const rawText = match[1].replace(/<[^>]+>/g, '');
     assert.doesNotMatch(rawText, /WWorld/, 'skeleton-brand raw text must not concatenate as "WWorld Monitor"');
-    assert.match(rawText, /World Monitor/, 'skeleton-brand raw text must contain "World Monitor"');
+    assert.match(rawText, /AERO INTEL/, 'skeleton-brand raw text must contain "AERO INTEL"');
   });
 
   it('.skeleton-brand-mark is aria-hidden and has no text content', () => {
@@ -5060,7 +5060,7 @@ describe('skeleton brand text extraction (#5541)', () => {
   });
 
   it('.skeleton-brand-mark renders "W" via CSS content pseudo-element', () => {
-    assert.match(indexHtml, /\.skeleton-brand-mark::after\s*\{\s*content:\s*"W"\s*\}/, 'skeleton-brand-mark must render W via CSS ::after content');
+    assert.match(indexHtml, /\.skeleton-brand-mark::after\s*\{\s*content:\s*""\s*\}/, 'skeleton-brand-mark must not inject a World Monitor W onto AERO INTEL');
   });
 });
 

@@ -11,6 +11,9 @@ import {
   type LiveVideoStation,
 } from '@/config/live-video-stations';
 import { NEWS_HIERARCHY } from '@/config/product';
+import {
+  AERO_INTEL_LIVE_STATION_EVENT,
+} from '@/services/aero-gemini-actions';
 import { sanitizeUrl } from '@/utils/sanitize';
 import { safeStorageGet, safeStorageSet } from '@/utils/safe-storage';
 
@@ -87,6 +90,21 @@ export class LiveVideoStrip {
     this.root.replaceChildren(header, chips, this.playerEl);
     this.syncChipState();
     void this.loadStation(this.activeId);
+    window.addEventListener(AERO_INTEL_LIVE_STATION_EVENT, this.boundStationCommand);
+  }
+
+  private readonly boundStationCommand = (event: Event): void => {
+    const stationId = String((event as CustomEvent<{ stationId?: string }>).detail?.stationId || '');
+    if (stationId) this.selectStation(stationId);
+  };
+
+  public selectStation(id: string): boolean {
+    if (!getLiveVideoStation(id)) return false;
+    this.activeId = id;
+    safeStorageSet(STORAGE_KEY, id);
+    this.syncChipState();
+    void this.loadStation(id);
+    return true;
   }
 
   private readSavedStation(): string | null {

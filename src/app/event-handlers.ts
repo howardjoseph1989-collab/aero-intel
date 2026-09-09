@@ -133,12 +133,17 @@ import {
   SPLIT_LAYOUT_MIN_WIDTH,
   LEGACY_WEB_SPLIT_LAYOUT_MIN_WIDTH,
   MAP_COL_DEFAULT_PERCENT,
+  MAP_STRIP_DEFAULT_PX,
+  MAP_STRIP_MIN_PX,
   clampMapColWidthPercent,
   getVisualMapSide,
   getMapColWidthBounds,
+  mapBottomStripHeightFromDrag,
+  mapBottomStripHeightFromKeyboard,
   mapRightClassForVisualSide,
   type MapVisualSide,
 } from '@/app/split-layout';
+import { AERO_INTEL_MAP_HEIGHT_EVENT } from '@/services/aero-gemini-actions';
 import {
   addResponsiveZoneListener,
   removeResponsiveZoneListener,
@@ -2454,15 +2459,13 @@ export class EventHandlerManager implements AppModule {
     if (!mapSection || !resizeHandle || !mapContainer) return;
 
     const isSplit = () => window.innerWidth >= SPLIT_LAYOUT_MIN_WIDTH;
-    // Split mode sizes #mapContainer, stacked mode sizes #mapSection — two
-    // different elements, so each mode keeps its own storage key (#6417).
+    // Wide layout sizes the whole #mapSection as a bottom strip. Stacked
+    // (narrow) layout still sizes #mapSection. The old split mode keyed
+    // height on #mapContainer — migrate that preference onto the section.
     const getHeightKey = () => (isSplit() ? 'map-split-height' : 'map-height');
     const readSavedHeight = (): { value: string | null; sourceKey: string } => {
       const key = getHeightKey();
       const value = readStorageValue(key);
-      // Before the keys were mode-scoped both modes overwrote 'map-height';
-      // fall back to it so existing split-mode users keep their height. The
-      // restore below completes the migration by writing the split key.
       const canUseLegacySplitHeight = this.ctx.isDesktopApp
         || window.innerWidth >= LEGACY_WEB_SPLIT_LAYOUT_MIN_WIDTH;
       if (value === null && isSplit() && canUseLegacySplitHeight) {
@@ -2470,7 +2473,7 @@ export class EventHandlerManager implements AppModule {
       }
       return { value, sourceKey: key };
     };
-    const getMinHeight = () => (isSplit() ? 280 : 350);
+    const getMinHeight = () => (isSplit() ? MAP_STRIP_MIN_PX : 350);
     const getMaxHeight = () => {
       if (!isSplit()) return Math.max(getMinHeight(), window.innerHeight - 150);
 
@@ -2480,17 +2483,24 @@ export class EventHandlerManager implements AppModule {
       const totalAvailable = window.innerHeight - headerHeight;
 
       if (isEmpty) {
-        return totalAvailable - 25;
-      } else {
-        return totalAvailable - 300;
+        return Math.max(getMinHeight(), totalAvailable - 180);
       }
+      return Math.max(getMinHeight(), totalAvailable - 300);
     };
 
-    const getTarget = () => (isSplit() ? mapContainer : mapSection);
+    const getTarget = () => mapSection;
     const getCurrentHeight = () => {
       const target = getTarget();
       const inlineHeight = Number.parseFloat(target.style.height);
       return Number.isFinite(inlineHeight) ? inlineHeight : target.offsetHeight;
+    };
+    const applyHeight = (px: number) => {
+      const clamped = Math.max(getMinHeight(), Math.min(px, getMaxHeight()));
+      mapSection.style.height = `${clamped}px`;
+      mapSection.style.setProperty('--map-strip-height', `${clamped}px`);
+      document.querySelector<HTMLElement>('.main-content')
+        ?.style.setProperty('--map-strip-height', `${clamped}px`);
+      return clamped;
     };
     const syncHeightSeparatorAria = () => {
       const target = getTarget();
@@ -2511,24 +2521,19 @@ export class EventHandlerManager implements AppModule {
 
     const applySavedHeight = () => {
       const { value: savedHeight, sourceKey } = readSavedHeight();
-      if (!savedHeight) return;
+      if (!savedHeight) {
+        if (isSplit()) applyHeight(MAP_STRIP_DEFAULT_PX);
+        return;
+      }
       const numeric = Number.parseInt(savedHeight, 10);
       if (Number.isFinite(numeric)) {
-        const clamped = Math.max(getMinHeight(), Math.min(numeric, getMaxHeight()));
-        if (isSplit()) {
-          mapContainer.style.flex = 'none';
-          mapContainer.style.height = `${clamped}px`;
-        } else {
-          mapSection.style.height = `${clamped}px`;
-        }
-        // Persist when the value was clamped, or when it came from the
-        // legacy shared key — writing the mode key completes the migration
-        // so stacked-mode edits stop steering split restores.
+        const clamped = applyHeight(numeric);
         if (clamped !== numeric || sourceKey !== getHeightKey()) {
           writeStorageValue(getHeightKey(), `${clamped}px`);
         }
       } else {
         removeStorageValue(sourceKey);
+        if (isSplit()) applyHeight(MAP_STRIP_DEFAULT_PX);
       }
     };
     applySavedHeight();
@@ -2537,10 +2542,9 @@ export class EventHandlerManager implements AppModule {
     let isResizing = false;
     let startY = 0;
     let startHeight = 0;
-    // Captured at mousedown so a viewport crossing 900px mid-drag cannot
-    // switch the resized element or the storage key under the drag.
     let dragTarget: HTMLElement | null = null;
     let dragKey = 'map-height';
+    let dragGrowsUp = false;
 
     this.boundMapEndResizeHandler = () => {
       if (!isResizing) return;
@@ -2555,18 +2559,10 @@ export class EventHandlerManager implements AppModule {
     };
     const endResize = this.boundMapEndResizeHandler;
 
-    // Crossing the split threshold moves the height target between
-    // #mapContainer (split) and #mapSection (stacked). Finish an active drag
-    // before clearing the departing element so its captured key receives the
-    // last numeric height, then restore the arriving mode's preference.
     this.mapSplitZoneListener = addResponsiveZoneListener(window, SPLIT_LAYOUT_MIN_WIDTH, () => {
       endResize();
-      if (isSplit()) {
-        mapSection.style.height = '';
-      } else {
-        mapContainer.style.height = '';
-        mapContainer.style.flex = '';
-      }
+      mapContainer.style.height = '';
+      mapContainer.style.flex = '';
       applySavedHeight();
       syncHeightSeparatorAria();
       this.ctx.map?.resize();
@@ -2577,6 +2573,7 @@ export class EventHandlerManager implements AppModule {
       startY = e.clientY;
       dragTarget = getTarget();
       dragKey = getHeightKey();
+      dragGrowsUp = isSplit();
       startHeight = dragTarget.offsetHeight;
       this.ctx.map?.setIsResizing(true);
       mapSection.classList.add('resizing');
@@ -2585,48 +2582,41 @@ export class EventHandlerManager implements AppModule {
     });
 
     resizeHandle.addEventListener('dblclick', () => {
-      const isWide = isSplit();
-      const target = isWide ? mapContainer : mapSection;
       const heightKey = getHeightKey();
-
-      const targetHeight = window.innerHeight * 0.5;
-      const finalHeight = Math.max(getMinHeight(), Math.min(targetHeight, getMaxHeight()));
+      const targetHeight = isSplit() ? MAP_STRIP_DEFAULT_PX : window.innerHeight * 0.5;
+      const finalHeight = applyHeight(targetHeight);
 
       this.ctx.map?.setIsResizing(true);
-      target.classList.add('map-section-smooth');
-
-      if (isWide) target.style.flex = 'none';
-      target.style.height = `${finalHeight}px`;
+      mapSection.classList.add('map-section-smooth');
       syncHeightSeparatorAria();
 
       let fired = false;
       const onEnd = () => {
         if (fired) return;
         fired = true;
-
-        target.classList.remove('map-section-smooth');
-        target.removeEventListener('transitionend', onEnd);
+        mapSection.classList.remove('map-section-smooth');
+        mapSection.removeEventListener('transitionend', onEnd);
         writeStorageValue(heightKey, `${finalHeight}px`);
         this.ctx.map?.setIsResizing(false);
         this.ctx.map?.resize();
         syncHeightSeparatorAria();
       };
 
-      target.addEventListener('transitionend', onEnd);
+      mapSection.addEventListener('transitionend', onEnd);
       this.ctx.map?.resize();
       setTimeout(onEnd, 500);
     });
 
-    // Keyboard path (WAI-ARIA window-splitter): the drag strip is a focusable
-    // separator; arrow keys step the height and persist like a finished drag.
     resizeHandle.addEventListener('keydown', (e: KeyboardEvent) => {
-      const step = e.key === 'ArrowUp' ? -40 : e.key === 'ArrowDown' ? 40 : 0;
-      if (step === 0) return;
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
       e.preventDefault();
-      const target = getTarget();
-      const newHeight = Math.max(getMinHeight(), Math.min(target.offsetHeight + step, getMaxHeight()));
-      if (isSplit()) target.style.flex = 'none';
-      target.style.height = `${newHeight}px`;
+      const newHeight = isSplit()
+        ? mapBottomStripHeightFromKeyboard(getTarget().offsetHeight, e.key, 40, getMinHeight(), getMaxHeight())
+        : Math.max(
+          getMinHeight(),
+          Math.min(getTarget().offsetHeight + (e.key === 'ArrowUp' ? -40 : 40), getMaxHeight()),
+        );
+      applyHeight(newHeight);
       this.ctx.map?.resize();
       writeStorageValue(getHeightKey(), `${newHeight}px`);
       syncHeightSeparatorAria();
@@ -2634,14 +2624,11 @@ export class EventHandlerManager implements AppModule {
 
     this.boundMapResizeMoveHandler = (e: MouseEvent) => {
       if (!isResizing) return;
-      const target = dragTarget ?? getTarget();
-
       const deltaY = e.clientY - startY;
-      const newHeight = Math.max(getMinHeight(), Math.min(startHeight + deltaY, getMaxHeight()));
-
-      if (target === mapContainer) target.style.flex = 'none';
-      target.style.height = `${newHeight}px`;
-
+      const newHeight = dragGrowsUp
+        ? mapBottomStripHeightFromDrag(startHeight, deltaY, getMinHeight(), getMaxHeight())
+        : Math.max(getMinHeight(), Math.min(startHeight + deltaY, getMaxHeight()));
+      applyHeight(newHeight);
       this.ctx.map?.resize();
       syncHeightSeparatorAria();
     };
@@ -2653,6 +2640,15 @@ export class EventHandlerManager implements AppModule {
       if (document.hidden) endResize();
     };
     document.addEventListener('visibilitychange', this.boundMapResizeVisChangeHandler);
+
+    window.addEventListener(AERO_INTEL_MAP_HEIGHT_EVENT, (event: Event) => {
+      const heightPx = Number((event as CustomEvent<{ heightPx?: number }>).detail?.heightPx);
+      if (!Number.isFinite(heightPx)) return;
+      const clamped = applyHeight(heightPx);
+      writeStorageValue(getHeightKey(), `${clamped}px`);
+      this.ctx.map?.resize();
+      syncHeightSeparatorAria();
+    });
   }
 
   setupMapWidthResize(): void {

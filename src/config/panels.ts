@@ -19,15 +19,15 @@ const IRAN_ATTACKS_ENABLED = typeof window !== 'undefined' && import.meta.env.VI
 // ============================================
 // FULL VARIANT (Geopolitical)
 // ============================================
-// Panel order matters! First panels appear at top of grid.
-// Desired order: live-news, AI Insights, AI Strategic Posture, cii, strategic-risk, then rest
+// Panel order matters! First panels appear at top of the grid.
+// AERO INTEL: US Local / US National / Live Webcams, then World, then Live News video.
 const FULL_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Global Map', enabled: true, priority: 1 },
-  'live-news': { name: 'Live News', enabled: true, priority: 1 },
   'us-local': { name: 'US Local', enabled: true, priority: 1 },
   us: { name: 'US National', enabled: true, priority: 1 },
-  politics: { name: 'World / International', enabled: true, priority: 1 },
   'live-webcams': { name: 'Live Webcams', enabled: true, priority: 1 },
+  politics: { name: 'World / International', enabled: true, priority: 1 },
+  'live-news': { name: 'Live News', enabled: true, priority: 1 },
   'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
   insights: { name: 'AI Insights', enabled: true, priority: 1 },
   'threat-timeline': { name: 'Threat Timeline', enabled: true, priority: 1 },
@@ -42,11 +42,11 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'escalation-correlation': { name: 'Escalation Monitor', enabled: true, priority: 2 },
   'economic-correlation': { name: 'Economic Warfare', enabled: true, priority: 2 },
   'disaster-correlation': { name: 'Disaster Cascade', enabled: true, priority: 2 },
-  europe: { name: 'Europe', enabled: true, priority: 1 },
-  middleeast: { name: 'Middle East', enabled: true, priority: 1 },
-  africa: { name: 'Africa', enabled: true, priority: 1 },
-  latam: { name: 'Latin America', enabled: true, priority: 1 },
-  asia: { name: 'Asia-Pacific', enabled: true, priority: 1 },
+  europe: { name: 'Europe', enabled: false, priority: 1 },
+  middleeast: { name: 'Middle East', enabled: false, priority: 1 },
+  africa: { name: 'Africa', enabled: false, priority: 1 },
+  latam: { name: 'Latin America', enabled: false, priority: 1 },
+  asia: { name: 'Asia-Pacific', enabled: false, priority: 1 },
   energy: { name: 'Energy & Resources', enabled: true, priority: 1 },
   gov: { name: 'Government', enabled: true, priority: 1 },
   thinktanks: { name: 'Think Tanks', enabled: true, priority: 1 },
@@ -1504,7 +1504,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   // All variants — essential panels
   core: {
     labelKey: 'header.panelCatCore',
-    panelKeys: ['map', 'live-news', 'live-webcams', 'windy-webcams', 'insights', 'strategic-posture', 'latest-brief'],
+    panelKeys: ['map', 'us-local', 'us', 'live-webcams', 'live-news', 'windy-webcams', 'insights', 'strategic-posture', 'latest-brief'],
   },
 
   // Full (geopolitical) variant — marketsFinance/topical/dataTracking are
@@ -1521,7 +1521,7 @@ export const PANEL_CATEGORY_MAP: Record<string, { labelKey: string; panelKeys: s
   },
   regionalNews: {
     labelKey: 'header.panelCatRegionalNews',
-    panelKeys: ['politics', 'us', 'europe', 'middleeast', 'africa', 'latam', 'asia'],
+    panelKeys: ['us-local', 'us', 'politics', 'europe', 'middleeast', 'africa', 'latam', 'asia'],
     variants: ['full'],
   },
   marketsFinance: {

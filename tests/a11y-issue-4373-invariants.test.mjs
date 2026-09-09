@@ -57,11 +57,50 @@ function contrastRatio(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-// Extract a `--token: #value;` from the :root block of main.css.
+function extractCssBlock(source, blockStart) {
+  const start = source.indexOf(blockStart);
+  assert.ok(start >= 0, `theme block not found: ${blockStart}`);
+  const open = source.indexOf('{', start);
+  assert.ok(open >= 0, `opening brace for ${blockStart} not found`);
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    if (source[i] === '{') depth += 1;
+    else if (source[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(open, i + 1);
+    }
+  }
+  assert.fail(`unclosed theme block: ${blockStart}`);
+}
+
+function parseThemeColor(raw) {
+  const value = String(raw).trim();
+  const hex = value.match(/^(#[0-9a-fA-F]{3,8})\b/);
+  if (hex) return hex[1];
+  const rgb = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (!rgb) return null;
+  return `#${[rgb[1], rgb[2], rgb[3]]
+    .map((channel) => Number(channel).toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+// Extract a `--token` color from a :root block of main.css (hex or rgb/rgba).
+// Semantic aliases such as --red-strong live in the second :root, not the
+// first theme block.
 function cssToken(name) {
-  const m = css.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
-  assert.ok(m, `--${name} token must be defined in main.css`);
-  return m[1];
+  let searchFrom = 0;
+  while (searchFrom < css.length) {
+    const idx = css.indexOf(':root {', searchFrom);
+    if (idx < 0) break;
+    const slice = extractCssBlock(css.slice(idx), ':root {');
+    const m = slice.match(new RegExp(`--${name}:\\s*([^;]+)`));
+    if (m) {
+      const parsed = parseThemeColor(m[1]);
+      if (parsed) return parsed;
+    }
+    searchFrom = idx + 7;
+  }
+  assert.fail(`--${name} token must be defined in a :root block`);
 }
 
 // Self-check the contrast math against the issue's reported figures.
@@ -164,15 +203,17 @@ describe('color-contrast — footer copyright', () => {
   it('.site-footer-copy also clears AA in light theme', () => {
     // cssToken() returns the first (dark/:root) value, so the light theme is
     // unguarded otherwise — and #6b6b6b on #fff is only ~4.84:1, close enough
-    // that a token tweak could silently regress it.
-    const lightBlock = [...css.matchAll(/\[data-theme="light"\][^{]*\{([^}]*)\}/g)]
-      .map((m) => m[1])
-      .find((b) => /--text-dim:/.test(b) && /--surface:/.test(b));
+    // that a token tweak could silently regress it. Brace-match the real
+    // `[data-theme="light"]` rule; a comment mentioning that selector used to
+    // steal `:root` and then fail when --surface became rgba glass.
+    const lightBlock = extractCssBlock(css, '[data-theme="light"] {');
     assert.ok(lightBlock, 'light theme token block must define --text-dim and --surface');
     const lightToken = (name) => {
-      const m = lightBlock.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
-      assert.ok(m, `light theme --${name} must be a hex value`);
-      return m[1];
+      const m = lightBlock.match(new RegExp(`--${name}:\\s*([^;]+)`));
+      assert.ok(m, `light theme --${name} must be defined`);
+      const parsed = parseThemeColor(m[1]);
+      assert.ok(parsed, `light theme --${name} must be a hex or rgb/rgba value`);
+      return parsed;
     };
     const fg = lightToken('text-dim');
     const bg = lightToken('surface');

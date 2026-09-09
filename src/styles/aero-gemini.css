@@ -1,0 +1,245 @@
+/* AERO GEMINI — always-visible top chrome control */
+
+.aero-gemini-control {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 20;
+}
+
+.aero-gemini-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aero-gemini-toggle,
+.aero-gemini-mic,
+.aero-gemini-send {
+  border: 2px solid #fff;
+  background: transparent;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.aero-gemini-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.aero-gemini-mark {
+  color: #fff;
+  font-size: 13px;
+}
+
+.aero-gemini-mic {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.aero-gemini-mic.recording {
+  background: #fff;
+  color: #000;
+}
+
+.aero-gemini-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(420px, calc(100vw - 24px));
+  padding: 10px;
+  background: rgba(6, 6, 6, 0.92);
+  border: 2px solid #fff;
+  backdrop-filter: blur(14px);
+  color: #fff;
+  z-index: 40;
+}
+
+.aero-gemini-status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.aero-gemini-log {
+  max-height: 220px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.aero-gemini-row {
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.aero-gemini-row-user {
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.aero-gemini-row-gemini {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.aero-gemini-row-tool {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #d0d0d0;
+}
+
+.aero-gemini-form {
+  display: flex;
+  gap: 6px;
+}
+
+.aero-gemini-input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 2px solid #fff;
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+}
+
+.aero-gemini-send {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.mobile-menu .aero-gemini-control {
+  margin: 8px 12px 4px;
+}
+
+.mobile-menu .aero-gemini-panel {
+  position: relative;
+  top: 8px;
+  width: auto;
+}
+
+/* Single US-first news briefing stream */
+#newsBriefingSurface {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  min-height: min(70vh, 720px);
+  padding: 12px 16px 18px;
+  background: rgba(6, 6, 6, 0.82);
+  border: 2px solid #fff;
+  backdrop-filter: blur(14px);
+}
+
+.news-briefing-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 16px;
+  margin-bottom: 10px;
+}
+
+.news-briefing-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.news-briefing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.news-briefing-stream {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+#newsBriefingSurface .panel-content {
+  overflow: visible;
+  max-height: none;
+  height: auto;
+}
+
+#newsBriefingSurface .panel {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  grid-column: auto;
+}
+
+#newsBriefingSurface .panel > .panel-header {
+  display: none;
+}
+
+#newsBriefingSurface .panel:not(.briefing-active) {
+  display: none;
+}
+
+#newsBriefingSurface .item,
+#newsBriefingSurface .item.clustered {
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  margin: 0;
+  padding: 18px 0;
+  background: transparent;
+}
+
+#newsBriefingSurface .item-title {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #fff;
+}
+
+#newsBriefingSurface .item-body,
+#newsBriefingSurface .item-snippet {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #fff;
+}
+
+.webcam-live-tv-dock {
+  border-top: 2px solid #fff;
+  background: rgba(6, 6, 6, 0.72);
+}
+
+.webcam-live-tv-summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.webcam-live-tv-dock .live-video-strip {
+  border-bottom: none;
+}

@@ -53,6 +53,7 @@
 
 import { trackPrivacyRestricted, type UmamiEvent } from './analytics';
 import { markLcpDebug } from '../utils/lcp-debug';
+import { bindAeroGeminiWebMcpTools } from './aero-gemini-actions';
 import {
   WEBMCP_SPA_TOOL,
   WEBMCP_SPA_TOOL_NAMES,
@@ -3141,6 +3142,7 @@ export function registerWebMcpTools(
     ?? (typeof window === 'undefined' ? null : window);
   const trackEvent = runtime.track ?? trackPrivacyRestricted;
   const tools = buildWebMcpTools(app, trackEvent);
+  bindAeroGeminiWebMcpTools(tools);
   const controller = new AbortController();
   let registrationStarted = false;
 

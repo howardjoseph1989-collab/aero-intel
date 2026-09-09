@@ -1005,6 +1005,8 @@ const EXCLUDED_HOSTS = new Set([
   'reddit.com',
   'openrouter.ai',
   'api.groq.com',
+  // Gemini generateContent is inference, not an ingested dataset.
+  'generativelanguage.googleapis.com',
   'tts.baidu.com',
   'api.indexnow.org',
   'data.worldbank.org',

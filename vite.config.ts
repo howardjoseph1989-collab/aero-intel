@@ -860,6 +860,61 @@ function youtubeLivePlugin(): Plugin {
   };
 }
 
+function aeroGeminiDevPlugin(): Plugin {
+  return {
+    name: 'aero-gemini-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const pathOnly = req.url?.split('?')[0];
+        if (pathOnly !== '/api/aero-gemini') {
+          return next();
+        }
+
+        try {
+          const mod = await server.ssrLoadModule('/api/aero-gemini.ts') as {
+            default: (request: Request) => Promise<Response>;
+          };
+          const port = server.config.server.port || 3000;
+          const url = new URL(req.url || '/api/aero-gemini', `http://127.0.0.1:${port}`);
+
+          let body: string | undefined;
+          if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+            const chunks: Buffer[] = [];
+            for await (const chunk of req) {
+              chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+            }
+            body = Buffer.concat(chunks).toString();
+          }
+
+          const headers: Record<string, string> = {};
+          for (const [key, value] of Object.entries(req.headers)) {
+            if (typeof value === 'string') headers[key] = value;
+            else if (Array.isArray(value)) headers[key] = value.join(', ');
+          }
+
+          const webRequest = new Request(url.toString(), {
+            method: req.method,
+            headers,
+            body: body || undefined,
+          });
+
+          const response = await mod.default(webRequest);
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => {
+            res.setHeader(key, value);
+          });
+          res.end(Buffer.from(await response.arrayBuffer()));
+        } catch (error) {
+          console.error('[AERO GEMINI] dev plugin error:', error);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'AERO GEMINI dev proxy failed' }));
+        }
+      });
+    },
+  };
+}
+
 function gpsjamDevPlugin(): Plugin {
   return {
     name: 'gpsjam-dev',
@@ -1006,6 +1061,7 @@ export default defineConfig(({ mode }) => {
       polymarketPlugin(),
       rssProxyPlugin(),
       youtubeLivePlugin(),
+      aeroGeminiDevPlugin(),
       gpsjamDevPlugin(),
       sebufApiPlugin(),
       brotliPrecompressPlugin(),

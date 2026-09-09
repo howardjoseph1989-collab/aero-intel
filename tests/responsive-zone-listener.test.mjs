@@ -9,10 +9,6 @@ import {
 } from '../src/app/responsive-zone-listener.ts';
 import {
   SPLIT_LAYOUT_MIN_WIDTH,
-  MAP_COL_MIN_PX,
-  MAP_COL_DEFAULT_PERCENT,
-  PANELS_COL_MIN_PX,
-  MAP_COL_DIVIDER_PX,
 } from '../src/app/split-layout.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -205,15 +201,26 @@ describe('panel layout responsive zone wiring', () => {
     );
   });
 
-  it('keeps the CSS map-column floors aligned with the runtime floors', () => {
-    // Both pixel floors live in the grid track: the map's own minimum and the
-    // reserve for the panels column plus the divider.
-    const track = `min(max(var(--map-col-width, ${MAP_COL_DEFAULT_PERCENT}%), ${MAP_COL_MIN_PX}px), calc(100% - ${PANELS_COL_MIN_PX + MAP_COL_DIVIDER_PX}px))`;
-    const occurrences = mainCss.split(track).length - 1;
-    // The single split media block carries the left- and right-side templates.
-    assert.ok(
-      occurrences >= 2,
-      `main.css must apply the clamped map track in both split grid templates (found ${occurrences}, need 2)`,
+  it('keeps the CSS Global Situation strip aligned with the runtime split width', () => {
+    assert.match(
+      mainCss,
+      /@media \(min-width: 900px\)/,
+      'main.css must keep the 900px split gate aligned with SPLIT_LAYOUT_MIN_WIDTH',
+    );
+    assert.match(
+      mainCss,
+      /grid-template-rows:\s*minmax\(0,\s*1fr\)\s+auto/,
+      'wide layout must stack panels above a bottom Global Situation row',
+    );
+    assert.match(
+      mainCss,
+      /--map-strip-height/,
+      'bottom strip height must be driven by --map-strip-height',
+    );
+    assert.match(
+      mainCss,
+      /\.map-resize-handle[\s\S]{0,240}order:\s*-1/,
+      'wide layout places the resize handle at the top of the map strip',
     );
     assert.doesNotMatch(
       mainCss,

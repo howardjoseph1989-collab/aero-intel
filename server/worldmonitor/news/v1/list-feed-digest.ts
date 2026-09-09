@@ -2738,16 +2738,28 @@ function buildDigestFeedBatches(variant: string, lang: string): {
 
   // #7083: category-fair scheduling, with the deadline-priority promise
   // kept absolute: feeds with deadlinePriority > 0 start first in a cold
-  // build (the China coverage trio is market-hours critical), and the rest
-  // interleave so the next wave contains the head of every eligible
-  // category — a slow category can no longer push all later categories
-  // behind the global deadline.
+  // build (the China coverage trio is market-hours critical). Remaining
+  // feeds interleave, but the first pass skips categories already present
+  // in the priority head so every eligible category still fits in the
+  // first BATCH_CONCURRENCY wave instead of being crowded out by a
+  // second asia slot.
   const priorityOrdered = orderServerFeedEntries(allEntries);
   const priorityHead = priorityOrdered.filter((entry) => (entry.feed.deadlinePriority ?? 0) > 0);
-  const orderedEntries = [
-    ...priorityHead,
-    ...interleaveByCategory(priorityOrdered.filter((entry) => (entry.feed.deadlinePriority ?? 0) <= 0)),
-  ];
+  const interleaved = interleaveByCategory(
+    priorityOrdered.filter((entry) => (entry.feed.deadlinePriority ?? 0) <= 0),
+  );
+  const coveredCategories = new Set(priorityHead.map((entry) => entry.category));
+  const unseenCategoryHeads: DigestFeedEntry[] = [];
+  const interleavedRemainder: DigestFeedEntry[] = [];
+  for (const entry of interleaved) {
+    if (coveredCategories.has(entry.category)) {
+      interleavedRemainder.push(entry);
+      continue;
+    }
+    unseenCategoryHeads.push(entry);
+    coveredCategories.add(entry.category);
+  }
+  const orderedEntries = [...priorityHead, ...unseenCategoryHeads, ...interleavedRemainder];
   const batches: DigestFeedEntry[][] = [];
   for (let i = 0; i < orderedEntries.length; i += BATCH_CONCURRENCY) {
     batches.push(orderedEntries.slice(i, i + BATCH_CONCURRENCY));

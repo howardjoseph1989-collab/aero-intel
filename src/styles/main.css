@@ -2,6 +2,7 @@
 @import './panels.css';
 @import './route-explorer.css';
 @import './live-video-strip.css';
+@import './aero-gemini.css';
 
 /* ============================================================
    Theme Colors — overridden by [data-theme="light"] below
@@ -348,6 +349,7 @@ canvas,
      Kept below .search-overlay (2000) and modals so they still cover the header. */
   position: relative;
   z-index: 600;
+  overflow: visible;
 }
 
 /* -- Tauri desktop: separate title bar for traffic lights -- */
@@ -23419,67 +23421,68 @@ body.map-width-resizing {
 
 /* 900px mirrors SPLIT_LAYOUT_MIN_WIDTH (src/app/split-layout.ts) — one
    threshold for web and desktop since #6417 (the Tauri window minimum width
-   keeps the desktop app above it, so this block covers both). The map track
-   pins both pixel floors: 220px = MAP_COL_MIN_PX and 306px = PANELS_COL_MIN_PX
-   + MAP_COL_DIVIDER_PX. tests/responsive-zone-listener.test.mjs pins the
-   alignment. */
+   keeps the desktop app above it, so this block covers both). AERO INTEL
+   places Global Situation as a full-width bottom strip; drag the handle at
+   the top of the map upward to grow it. tests/responsive-zone-listener.test.mjs
+   pins the alignment. */
 @media (min-width: 900px) {
   .main-content {
     display: grid;
-    grid-template-columns: min(max(var(--map-col-width, 60%), 220px), calc(100% - 306px)) 6px 1fr;
-    grid-template-rows: 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
     gap: 4px 0;
     overflow: hidden;
   }
 
   .main-content.map-right:not(.map-hidden) {
-    grid-template-columns: 1fr 6px min(max(var(--map-col-width, 60%), 220px), calc(100% - 306px));
-  }
-
-  .main-content.map-right .map-section {
-    grid-column: 3;
-  }
-
-  .main-content.map-right .panels-grid {
-    grid-column: 1;
-  }
-
-  .map-side-btn {
-    display: inline-flex;
-  }
-
-  .map-width-resize-handle {
-    display: flex;
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .main-content.map-hidden {
     grid-template-columns: 1fr;
   }
 
-  .main-content.map-hidden .panels-grid {
-    grid-column: 1;
-  }
-
-  .main-content.map-hidden .map-width-resize-handle {
-    display: none;
-  }
-
+  .main-content.map-right .map-section,
   .map-section {
     grid-column: 1;
-    grid-row: 1;
-    height: 100% !important;
-    min-height: 0;
-    max-height: none;
+    grid-row: 2;
+    height: var(--map-strip-height, 280px);
+    min-height: 160px;
+    max-height: calc(100vh - 160px);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     border-bottom: none;
   }
 
+  .main-content.map-right .panels-grid,
+  .panels-grid {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 0;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-auto-rows: minmax(var(--dashboard-panel-row-min), var(--dashboard-panel-row-max));
+    align-content: start;
+    overflow-y: auto;
+  }
+
+  .map-side-btn {
+    display: none;
+  }
+
+  .map-width-resize-handle,
+  .main-content.map-hidden .map-width-resize-handle {
+    display: none;
+  }
+
+  .main-content.map-hidden {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .main-content.map-hidden .panels-grid {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
   .map-section.pinned {
-    height: 100% !important;
+    height: var(--map-strip-height, 280px);
   }
 
   .map-container-smooth {
@@ -23497,6 +23500,7 @@ body.map-width-resizing {
 
   .map-resize-handle {
     position: relative;
+    order: -1;
     bottom: auto;
     left: auto;
     right: auto;
@@ -23504,6 +23508,7 @@ body.map-width-resizing {
     background: var(--border-subtle);
     margin: 0;
     cursor: ns-resize;
+    display: flex;
   }
 
   .map-resize-handle:hover {
@@ -23512,20 +23517,6 @@ body.map-width-resizing {
 
   .map-section.pinned {
     position: relative;
-  }
-
-  .map-resize-handle {
-    display: flex;
-  }
-
-  .panels-grid {
-    grid-column: 3;
-    grid-row: 1;
-    min-height: 0;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    grid-auto-rows: minmax(var(--dashboard-panel-row-min), var(--dashboard-panel-row-max));
-    align-content: start;
-    overflow-y: auto;
   }
 }
 

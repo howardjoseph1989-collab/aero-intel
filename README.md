@@ -26,9 +26,26 @@ Other variant dev servers (`npm run dev:tech`, `dev:finance`, …) still exist; 
 
 ## AERO INTEL defaults
 
-### Live video feeds (top strip)
+### AERO GEMINI
 
-A **Live video feeds** strip sits at the top of the dashboard: one large player plus station chips. **Fox News is selected by default and playback is muted.**
+An **AERO GEMINI** mic + chat control sits at the **top of the chrome** (first item in the header). It is a turn-based Google AI Studio path: speak or type → Gemini `generateContent` → dashboard tools → short spoken confirmation. Full realtime / OpenAI Realtime is not required.
+
+Set a **Google AI Studio** key in `.env.local` (never a Maps key, never a `VITE_` prefix):
+
+```
+GEMINI_API_KEY=
+# optional alias:
+GOOGLE_API_KEY=
+# optional:
+GEMINI_VOICE_MODEL=
+GEMINI_TTS_MODEL=
+```
+
+Tools can brief news, toggle layers, focus/navigate panels, switch ISS/Earth webcams, pick live TV stations, resize Global Situation, and rearrange panels through the existing dashboard APIs.
+
+### Live webcams (ISS / Earth first)
+
+Live webcams are prominent in the panel grid. The default wall is **ISS Earth View**, **NASA TV**, then US cities (Washington, New York). Regional chips start Space → Americas. A collapsed **Live TV** dock inside the webcam panel keeps Fox/CNN/MSNBC/… stations — they are **not** a box above the cams.
 
 | Station | YouTube live page | Embed / fallback |
 |---------|-------------------|------------------|
@@ -41,31 +58,31 @@ A **Live video feeds** strip sits at the top of the dashboard: one large player 
 | Newsmax | https://www.youtube.com/@NEWSMAX/live | YouTube embed |
 | BBC World (optional chip) | https://www.youtube.com/@BBCNews/live | YouTube embed; HLS often UK-geo-restricted |
 
-If YouTube blocks the iframe (embed restriction, bot-check, or no live id), the strip shows a short reason and an **Open on YouTube** link. When a documented HLS URL exists, it is tried next. The original Live News panel remains in the grid with the full upstream channel catalog.
+If YouTube blocks the iframe (embed restriction, bot-check, or no live id), the dock shows a short reason and an **Open on YouTube** link. When a documented HLS URL exists, it is tried next. The original Live News panel remains in the catalog with the full upstream channel catalog.
 
-### News hierarchy
+### News briefing
 
-Default feed / panel order:
+One large US-first reading surface (not a pile of small cards):
 
 1. **US Local**
 2. **US National**
 3. **World / International**
 4. **Markets**
-5. **Other** (Europe and remaining regional desks)
+5. **Other**
 
-A news-hierarchy bar under the video strip jumps to those panels. Existing regional, intel, markets, and specialty panels are not removed.
+Hierarchy chips switch the stream. Regional desks stay in Settings (default off). Existing intel, markets, and specialty panels are not removed.
 
-### Map
+### Global Situation
 
-First load (no URL params): `view=america`, `zoom=2.5`, `timeRange=7d`. Default layers keep conflicts, hotspots, sanctions, weather, outages, and natural events on.
+The map is a **full-width strip on the bottom row**. Drag the handle at the **top of the map upward** to make it taller. First load (no URL params): `view=america`, `zoom=2.5`, `timeRange=7d`. Default layers keep conflicts, hotspots, sanctions, weather, outages, and natural events on.
 
 ### Reading chrome
 
-Dark translucent glass panels with **white** borders and **white, bold, larger** labels for long reading. The map canvas stays clear of chrome overlays.
+Dark translucent glass with **white** borders and **white, bold, larger** labels for long reading. The map canvas stays clear of chrome overlays.
 
 ## What it still does
 
-Everything World Monitor already shipped: curated news, dual map engine (globe.gl + deck.gl/MapLibre), panel inventory, CII, finance radar, variants, Tauri desktop, multilingual UI, MCP/REST. Do not treat this fork as a reduced product.
+Everything World Monitor already shipped: curated news, dual map engine (globe.gl + deck.gl/MapLibre), panel inventory, [CII live rankings](https://www.worldmonitor.app/country-instability-index/), finance radar, variants, Tauri desktop, multilingual UI, MCP/REST. Do not treat this fork as a reduced product.
 
 ## License and attribution
 

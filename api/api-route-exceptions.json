@@ -10,6 +10,13 @@
       "removal_issue": null
     },
     {
+      "path": "api/aero-gemini.ts",
+      "category": "upstream-proxy",
+      "reason": "AERO GEMINI turn broker. Request/response envelope is Google AI Studio generateContent (text/audio/functionCall), not a product proto. GEMINI_API_KEY stays server-side; per-IP limit is registered in ENDPOINT_RATE_POLICIES and enforced in-handler.",
+      "owner": "@SebastienMelki",
+      "removal_issue": null
+    },
+    {
       "path": "api/a2a.ts",
       "category": "external-protocol",
       "reason": "A2A (Agent-to-Agent) JSON-RPC 2.0 endpoint behind /.well-known/agent-card.json — envelope and method surface (message/send, tasks/*) dictated by the A2A spec v0.3.0, not something we can redefine as proto. Anonymous concierge over the public MCP tool catalog + public freshness envelope only; per-IP limit registered in ENDPOINT_RATE_POLICIES and enforced in-handler.",
