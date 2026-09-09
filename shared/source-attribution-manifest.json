@@ -4478,6 +4478,20 @@
       ]
     },
     {
+      "host": "generativelanguage.googleapis.com",
+      "provider": "generativelanguage.googleapis.com",
+      "kind": "structured",
+      "observed": true,
+      "license": "Excluded: first-party, control-plane, UI, or rendering transport",
+      "attribution": "Excluded from the external-provider count: not an ingested upstream dataset.",
+      "status": "excluded",
+      "references": [
+        {
+          "path": "server/_shared/aero-gemini-broker.ts"
+        }
+      ]
+    },
+    {
       "host": "geo.tv",
       "provider": "geo.tv",
       "kind": "feed",

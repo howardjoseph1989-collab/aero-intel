@@ -176,6 +176,12 @@
   overflow: auto;
 }
 
+#newsBriefingSurface .panel-content {
+  overflow: visible;
+  max-height: none;
+  height: auto;
+}
+
 #newsBriefingSurface .panel {
   border: none;
   background: transparent;

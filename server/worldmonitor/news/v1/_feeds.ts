@@ -95,6 +95,21 @@ export const VARIANT_FEEDS: Record<string, Record<string, ServerFeed[]>> = {
       { name: 'Montreal Gazette', url: gnLocale('site:montrealgazette.com when:1d', 'en-CA', 'CA', 'CA:en') },
     ],
 
+    'us-local': [
+      { name: 'AP Local US', url: gn('US local news when:1d') },
+      { name: 'NYC Local', url: gn('New York City local news when:1d') },
+      { name: 'Los Angeles Local', url: gn('Los Angeles local news when:1d') },
+      { name: 'Chicago Local', url: gn('Chicago local news when:1d') },
+      { name: 'Houston Local', url: gn('Houston local news when:1d') },
+      { name: 'Washington DC Local', url: gn('Washington DC local news when:1d') },
+      { name: 'Miami Local', url: gn('Miami local news when:1d') },
+      { name: 'Atlanta Local', url: gn('Atlanta local news when:1d') },
+      { name: 'Dallas Local', url: gn('Dallas local news when:1d') },
+      { name: 'Boston Local', url: gn('Boston local news when:1d') },
+      { name: 'San Francisco Local', url: gn('San Francisco local news when:1d') },
+      { name: 'Phoenix Local', url: gn('Phoenix local news when:1d') },
+    ],
+
     europe: [
       { name: 'France 24', url: 'https://www.france24.com/en/rss' },
       { name: 'EuroNews', url: 'https://www.euronews.com/rss?format=xml' },

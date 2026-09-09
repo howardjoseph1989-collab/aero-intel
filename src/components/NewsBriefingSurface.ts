@@ -29,7 +29,7 @@ function briefingHost(): HTMLElement {
     chip.type = 'button';
     chip.className = 'news-hierarchy-chip';
     chip.dataset.hierarchy = entry.id;
-    chip.dataset.panel = entry.panelId ?? entry.id;
+    chip.dataset.briefingTarget = entry.panelId ?? entry.id;
     chip.textContent = entry.label;
     if (entry.id === 'us-local') chip.classList.add('active');
     chip.addEventListener('click', () => setNewsStream(entry.id, entry.panelId ?? entry.id));
@@ -39,6 +39,7 @@ function briefingHost(): HTMLElement {
 
   const stream = document.createElement('div');
   stream.className = 'news-briefing-stream';
+  stream.tabIndex = 0;
 
   host.append(header, stream);
   return host;
@@ -84,7 +85,7 @@ export function installNewsBriefingSurface(): void {
 
   const active = host.querySelector<HTMLElement>('.news-hierarchy-chip.active');
   const hierarchy = active?.dataset.hierarchy || 'us-local';
-  const panelId = active?.dataset.panel || 'us-local';
+  const panelId = active?.dataset.briefingTarget || 'us-local';
   setNewsStream(hierarchy, panelId);
 }
 

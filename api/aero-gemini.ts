@@ -47,6 +47,10 @@ function json(body: unknown, status: number, cors: Record<string, string>): Resp
 }
 
 async function enforceRateLimit(req: Request, cors: Record<string, string>): Promise<Response | null> {
+  // Redis-degraded scoped limits intentionally stay availability-first here:
+  // AERO GEMINI is a local/operator turn broker (text or audio to one
+  // generateContent hop). checkScopedRateLimit logs the degraded path; a
+  // Redis outage must not block dashboard voice+tools when a Studio key is set.
   const result = await checkScopedRateLimit(
     RATE_LIMIT_SCOPE,
     RATE_LIMIT_MAX,

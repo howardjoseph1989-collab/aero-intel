@@ -82,7 +82,7 @@ Dark translucent glass with **white** borders and **white, bold, larger** labels
 
 ## What it still does
 
-Everything World Monitor already shipped: curated news, dual map engine (globe.gl + deck.gl/MapLibre), panel inventory, CII, finance radar, variants, Tauri desktop, multilingual UI, MCP/REST. Do not treat this fork as a reduced product.
+Everything World Monitor already shipped: curated news, dual map engine (globe.gl + deck.gl/MapLibre), panel inventory, [CII live rankings](https://www.worldmonitor.app/country-instability-index/), finance radar, variants, Tauri desktop, multilingual UI, MCP/REST. Do not treat this fork as a reduced product.
 
 ## License and attribution
 

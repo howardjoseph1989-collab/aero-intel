@@ -556,7 +556,7 @@ describe('map split layout (#6417)', () => {
     it('split restore falls back to the legacy key and completes the migration', () => {
       stubInnerWidth(2000);
       localStorage.setItem('map-height', '450px');
-      const { section, container } = buildHeightDom();
+      const { section } = buildHeightDom();
       manager.setupMapResize();
 
       expect(section.style.height).toBe('450px');

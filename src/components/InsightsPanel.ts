@@ -65,6 +65,7 @@ export class InsightsPanel extends Panel {
       showCount: false,
       infoTooltip: t('components.insights.infoTooltip'),
     });
+    this.content.tabIndex = 0;
 
     // Web-only: subscribe to AI flow changes so toggling providers re-runs analysis
     // Skip on mobile — only server-side insights are used there (no client-side AI)

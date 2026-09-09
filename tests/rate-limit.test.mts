@@ -644,6 +644,11 @@ describe('scoped rate-limit degraded call-site policy (#3531)', () => {
       reason: 'NLWeb /ask serves only anonymous, quota-free, cheap catalog matching — degradation is logged and stays availability-first',
     },
     {
+      path: 'api/aero-gemini.ts',
+      expected: /Redis-degraded scoped limits intentionally stay availability-first/,
+      reason: 'AERO GEMINI is an operator-keyed turn broker; Redis degradation is logged and stays availability-first so local voice+tools still work',
+    },
+    {
       path: 'api/docs-mcp.ts',
       expected: /Redis-degraded scoped limits intentionally stay availability-first/,
       reason: 'docs MCP facade proxies a fully public, cheap upstream — degradation is logged and stays availability-first',

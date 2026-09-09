@@ -103,6 +103,7 @@ export class AeroGeminiControl {
 
     this.logEl = document.createElement('div');
     this.logEl.className = 'aero-gemini-log';
+    this.logEl.tabIndex = 0;
     this.logEl.setAttribute('aria-live', 'polite');
 
     const form = document.createElement('form');
