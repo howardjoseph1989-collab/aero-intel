@@ -15,6 +15,7 @@ import {
   userSetPanelEnabled,
   isFreePanelCapCounted,
 } from '@/config';
+import { PRODUCT_NAME } from '@/config/product';
 import { isProUser } from '@/services/widget-store';
 import { SITE_VARIANT } from '@/config/variant';
 import { loadFromStorage, saveToStorage } from '@/utils';
@@ -39,7 +40,7 @@ export function initSettingsWindow(): void {
   if (!appEl) return;
 
   // This window shows only "which panels to display" (panel display settings).
-  document.title = `${t('header.settings')} - World Monitor`;
+  document.title = `${t('header.settings')} - ${PRODUCT_NAME}`;
 
   const panelSettings = loadFromStorage<Record<string, PanelConfig>>(
     STORAGE_KEYS.panels,

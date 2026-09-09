@@ -229,7 +229,7 @@ describe('canonical schema graph', () => {
     assert.deepEqual(webPage.breadcrumb, { '@id': `${dashboardUrl}#breadcrumb` });
     assert.equal(crumbs['@id'], `${dashboardUrl}#breadcrumb`);
     assert.deepEqual(crumbs.itemListElement, [
-      { '@type': 'ListItem', position: 1, name: 'World Monitor', item: CANONICAL_ORIGIN },
+      { '@type': 'ListItem', position: 1, name: 'AERO INTEL', item: CANONICAL_ORIGIN },
       { '@type': 'ListItem', position: 2, name: 'Dashboard', item: dashboardUrl },
     ]);
   });

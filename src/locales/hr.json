@@ -1,7 +1,7 @@
 {
   "app": {},
   "shell": {
-    "documentTitle": "Svjetski Monitor — Nadzorna Ploča Globalne Obavještajne Informacije u Realnom Vremenu",
+    "documentTitle": "AERO INTEL — Personal Live Intelligence Dashboard",
     "metaDescription": "Platforma globalne obavještajne informacije u realnom vremenu. Prikazana u WIRED-u. Koristi je 2M+ osoba u 190 zemalja. Konflikti, tržišta, vojska, OSINT na jednom mjestu.",
     "offlineTitle": "Niste Mrežom Povezani",
     "offlineMessage": "Svjetski Monitor zahtijeva internetsku vezu za podatke obavještajne informacije u realnom vremenu.",
@@ -42,12 +42,12 @@
     "phaseError": "Greška",
     "previewCheckingHeading": "Povezivanje graditelja widgeta",
     "previewReadyHeading": "Opiši widget koji želiš",
-    "previewFetchingHeading": "Preuzimanje uživo WorldMonitor podataka",
+    "previewFetchingHeading": "Preuzimanje uživo AERO INTEL podataka",
     "previewComposingHeading": "Sastavljanje rasporeda widgeta",
     "previewErrorHeading": "Prikaz treba pažnju",
     "previewCheckingCopy": "Provjeravamo tvoj ključ widgeta i dostupnost pozadine prije omogućavanja generiranja.",
     "previewReadyCopy": "Koristi primjer upita ili opiši točan direktan prikaz koji želiš. Prikaz će se ažurirati ovdje prije nego što ga spremiš.",
-    "previewFetchingCopy": "Agent poziva odobrene WorldMonitor krajnje točke i oblikuje skup podataka za widget.",
+    "previewFetchingCopy": "Agent poziva odobrene AERO INTEL krajnje točke i oblikuje skup podataka za widget.",
     "previewComposingCopy": "Prikaz se prikazuje s najnovijim uživo podacima i stilizacijom nadzorne ploče.",
     "previewErrorCopy": "Ispravi problem, zatim pokušaj ponovno. Tvoji postojeći widgeti nisu na udaru.",
     "createInteractive": "Kreiraj interaktivni widget",
@@ -559,7 +559,8 @@
     "fearGreed": "Strah & Pohlepa",
     "marketBreadth": "Širina Tržišta",
     "climateNews": "Klimatske Vijesti",
-    "fx": "Devizni tečajevi"
+    "fx": "Devizni tečajevi",
+    "usLocal": "US Local"
   },
   "commands": {
     "prefixes": {
@@ -783,7 +784,7 @@
         "some": "Neke funkcije trebaju API ključeve"
       },
       "reserveEarlyAccess": "Rezerviši Rani Pristup",
-      "skipSetup": "Preskoči postavljanje — jedna World Monitor licenca otključava sve. Pridruži se listi čekanja za rani pristup.",
+      "skipSetup": "Preskoči postavljanje — jedna AERO INTEL licenca otključava sve. Pridruži se listi čekanja za rani pristup.",
       "summary": {
         "desktop": "Desktop režim",
         "web": "Web režim (samo čitanje, kredencijali upravljani serverom)",
@@ -2302,7 +2303,7 @@
       "loadError": "Climate News privremeno nije dostupan"
     },
     "chatAnalyst": {
-      "infoTooltip": "<strong>WM Analyst</strong> AI analitičar sa živim kontekstom kroz geopolitičke, tržišne, vojne i ekonomske domene. Pogonjen s Claude-om sa podacima u realnom vremenu ubrizganim iz aktivnih WorldMonitor feedova."
+      "infoTooltip": "<strong>WM Analyst</strong> AI analitičar sa živim kontekstom kroz geopolitičke, tržišne, vojne i ekonomske domene. Pogonjen s Claude-om sa podacima u realnom vremenu ubrizganim iz aktivnih AERO INTEL feedova."
     },
     "cotPositioning": {
       "infoTooltip": "<strong>CFTC COT Positioning</strong> Izvještaj Commitments of Traders: neto pozicioniranje komercijalaca, velikih špekulanata i malih trgovaca na robama i financijskim futures. Objavljeno tjedno (petak). Izvor: CFTC."
@@ -2480,7 +2481,7 @@
       "infoTooltip": "<strong>Macro Indicators</strong> Ključni makroekonomski pokazatelji za SAD i eurozone: CPI, nezaposlenost, BDP i kamatne stope središnjih banaka. Vrijednosti prikazane s razlikom od prethodnog razdoblja. Izvor: FRED (Federal Reserve Economic Data)."
     },
     "monitors": {
-      "infoTooltip": "<strong>Keyword Monitors</strong> Dodajte bilo koji pojam kako biste pratili živu spomenuću vijesti na svim WorldMonitor izvorima. Rezultati se ažuriraju u realnom vremenu dok se upareni članci primaju."
+      "infoTooltip": "<strong>Keyword Monitors</strong> Dodajte bilo koji pojam kako biste pratili živu spomenuću vijesti na svim AERO INTEL izvorima. Rezultati se ažuriraju u realnom vremenu dok se upareni članci primaju."
     },
     "renewable": {
       "infoTooltip": "<strong>Renewable Energy</strong> Udio proizvodnje električne energije iz obnovljivih izvora po regiji i godini, plus instalirana US kapaciteta za solarnu energiju, vjetar i ugljen (MW). Izvori: World Bank (EG.ELC.RNEW.ZS) i EIA."
@@ -3579,7 +3580,7 @@
   },
   "premium": {
     "pro": "PRO",
-    "lockedDesc": "Zahtijeva ključ World Monitor licence",
+    "lockedDesc": "Zahtijeva ključ AERO INTEL licence",
     "signInToUnlock": "Prijavite se da biste otključali premium značajke",
     "signIn": "Prijavite se za Otključavanje",
     "upgradeDesc": "Nadogradite se na Pro za potpun pristup premium analitici",

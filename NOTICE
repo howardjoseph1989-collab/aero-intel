@@ -1,0 +1,18 @@
+AERO INTEL
+==========
+
+AERO INTEL is a personal live intelligence dashboard derived from World Monitor.
+
+Upstream project
+----------------
+World Monitor (koala73/worldmonitor)
+https://github.com/koala73/worldmonitor
+
+Copyright (C) World Monitor contributors
+Licensed under the GNU Affero General Public License v3.0.
+
+This repository keeps the AGPL-3.0 LICENSE from upstream. Modifications that
+rebrand the product to AERO INTEL, add a live video strip, change default news
+order, and adjust reading chrome are additional work on that same licensed base.
+
+Required attribution: credit koala73/worldmonitor as the upstream project.

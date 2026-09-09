@@ -166,7 +166,7 @@ export function buildAgentNotFoundMarkdown(path: string): string {
   return [
     '# Not found',
     '',
-    `\`${safePath}\` is not a page on World Monitor.`,
+    `\`${safePath}\` is not a page on AERO INTEL.`,
     '',
     'Use these indexes instead of guessing URLs:',
     '',
@@ -179,8 +179,8 @@ export function buildAgentNotFoundMarkdown(path: string): string {
 
 export function buildHumanNotFoundHtml(path?: string): string {
   const pathLine = path
-    ? `<p><code>${sanitizePathForHtml(path)}</code> is not a page on World Monitor.</p>`
-    : '<p>This path is not a page on World Monitor.</p>';
+    ? `<p><code>${sanitizePathForHtml(path)}</code> is not a page on AERO INTEL.</p>`
+    : '<p>This path is not a page on AERO INTEL.</p>';
   return [
     '<!DOCTYPE html>',
     '<html lang="en">',
@@ -188,7 +188,7 @@ export function buildHumanNotFoundHtml(path?: string): string {
     '  <meta charset="UTF-8">',
     '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
     '  <meta name="robots" content="noindex">',
-    '  <title>Page not found — World Monitor</title>',
+    '  <title>Page not found — AERO INTEL</title>',
     '  <style>',
     '    body { background: #0a0f0a; color: #e0e0e0; font-family: system-ui;',
     '           display: flex; align-items: center; justify-content: center;',

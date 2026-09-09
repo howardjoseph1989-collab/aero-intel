@@ -53,7 +53,7 @@ export const CANONICAL_ORIGIN = 'https://www.worldmonitor.app/';
 export const SOFTWARE_SHARED_PROPERTIES = {
   '@type': 'SoftwareApplication',
   '@id': SOFTWARE_ID,
-  name: 'World Monitor',
+  name: 'AERO INTEL',
   url: CANONICAL_ORIGIN,
   description:
     'Free real-time global intelligence dashboard. Curated news feeds, conflict tracking, market data, shipping chokepoints, satellite passes and cyber signals fused into one live map of the world, with AI analysis layered on top.',
@@ -79,8 +79,8 @@ export const SOFTWARE_SHARED_PROPERTIES = {
 export const WEBSITE_SHARED_PROPERTIES = {
   '@type': 'WebSite',
   '@id': WEBSITE_ID,
-  name: 'World Monitor',
-  alternateName: 'WorldMonitor',
+  name: 'AERO INTEL',
+  alternateName: 'AERO INTEL',
   url: CANONICAL_ORIGIN,
   description:
     'Real-time global intelligence dashboard — live news, markets, military tracking, infrastructure monitoring, and geopolitical data.',

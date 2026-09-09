@@ -114,6 +114,21 @@ export const FULL_FEEDS: Record<string, Feed[]> = {
     { name: 'Montreal Gazette', url: rss('https://news.google.com/rss/search?q=site:montrealgazette.com+when:1d&hl=en-CA&gl=CA&ceid=CA:en') },
   ],
 
+  'us-local': [
+    { name: 'AP Local US', url: rss('https://news.google.com/rss/search?q=US+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'NYC Local', url: rss('https://news.google.com/rss/search?q=New+York+City+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Los Angeles Local', url: rss('https://news.google.com/rss/search?q=Los+Angeles+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Chicago Local', url: rss('https://news.google.com/rss/search?q=Chicago+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Houston Local', url: rss('https://news.google.com/rss/search?q=Houston+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Washington DC Local', url: rss('https://news.google.com/rss/search?q=Washington+DC+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Miami Local', url: rss('https://news.google.com/rss/search?q=Miami+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Atlanta Local', url: rss('https://news.google.com/rss/search?q=Atlanta+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Dallas Local', url: rss('https://news.google.com/rss/search?q=Dallas+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Boston Local', url: rss('https://news.google.com/rss/search?q=Boston+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'San Francisco Local', url: rss('https://news.google.com/rss/search?q=San+Francisco+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+    { name: 'Phoenix Local', url: rss('https://news.google.com/rss/search?q=Phoenix+local+news+when:1d&hl=en-US&gl=US&ceid=US:en') },
+  ],
+
   europe: [
     {
       name: 'France 24',
@@ -1580,6 +1595,10 @@ export const DEFAULT_ENABLED_SOURCES: Record<string, string[]> = {
   // + Global News remain catalog opt-in (arctic pack). Remaining depth names
   // are catalog opt-in. FR sources are locale-boosted only. CTV is GNews-only.
   us: ['Reuters US', 'NPR News', 'PBS NewsHour', 'ABC News', 'CBS News', 'NBC News', 'Wall Street Journal', 'Politico', 'The Hill', 'CBC News', 'CTV News', 'Toronto Star'],
+  'us-local': [
+    'AP Local US', 'NYC Local', 'Los Angeles Local', 'Chicago Local',
+    'Houston Local', 'Washington DC Local', 'Miami Local', 'Atlanta Local',
+  ],
   // Europe defaults — Ukraine war frontline (#5949) + UA/RU balance rule (#5950):
   // ≥1 dedicated UA primary (Kyiv Independent) + ≥1 independent RU (Meduza, Moscow Times).
   // PL frontline: TVN24 + Rzeczpospolita (not all three PL; noise control).
