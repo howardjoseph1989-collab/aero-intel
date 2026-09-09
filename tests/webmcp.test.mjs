@@ -1928,7 +1928,7 @@ describe('webmcp.ts: native tool execution and telemetry', () => {
     await assert.rejects(
       tool.execute({}),
       (error) => error.name === 'WebMcpToolError'
-        && error.message === 'World Monitor could not open search.'
+        && error.message === 'AERO INTEL could not open search.'
         && !error.message.includes('secret'),
     );
     assert.deepEqual(events, [{

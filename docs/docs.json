@@ -513,7 +513,7 @@
           },
           "links": [
             {
-              "header": "World Monitor",
+              "header": "AERO INTEL",
               "items": [
                 {
                   "label": "仪表盘",
@@ -970,7 +970,7 @@
     },
     "links": [
       {
-        "header": "World Monitor",
+        "header": "AERO INTEL",
         "items": [
           {
             "label": "Dashboard",

@@ -4,7 +4,7 @@
     "documentTitle": "AERO INTEL — Personal Live Intelligence Dashboard",
     "metaDescription": "Platforma globalne obavještajne informacije u realnom vremenu. Prikazana u WIRED-u. Koristi je 2M+ osoba u 190 zemalja. Konflikti, tržišta, vojska, OSINT na jednom mjestu.",
     "offlineTitle": "Niste Mrežom Povezani",
-    "offlineMessage": "Svjetski Monitor zahtijeva internetsku vezu za podatke obavještajne informacije u realnom vremenu.",
+    "offlineMessage": "AERO INTEL zahtijeva internetsku vezu za podatke obavještajne informacije u realnom vremenu.",
     "offlineRetry": "Pokušaj Ponovno"
   },
   "widgets": {

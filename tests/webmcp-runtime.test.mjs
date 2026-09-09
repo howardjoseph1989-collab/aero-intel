@@ -1104,7 +1104,7 @@ describe('registered WebMCP readiness behavior', () => {
     await assert.rejects(
       executeRegistered(provider, 'openSearch'),
       (error) => error.name === 'WebMcpToolError'
-        && error.message === 'World Monitor could not open search.'
+        && error.message === 'AERO INTEL could not open search.'
         && !error.message.includes('5ms'),
     );
     assert.deepEqual(harness.events.at(-1), {
@@ -1125,7 +1125,7 @@ describe('registered WebMCP readiness behavior', () => {
 
     const invocation = executeRegistered(provider, 'openSearch');
     destroyed.resolve();
-    await assert.rejects(invocation, /World Monitor could not open search/);
+    await assert.rejects(invocation, /AERO INTEL could not open search/);
     controller.abort();
     assert.deepEqual(await provider.getTools(), []);
   });

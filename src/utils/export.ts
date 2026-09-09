@@ -58,7 +58,7 @@ export function exportToCSV(data: ExportData, filename = 'worldmonitor-export'):
   const clean = sanitizeExportData(data);
   const lines: string[] = [];
 
-  lines.push(`# WorldMonitor Export — ${new Date(clean.timestamp).toISOString()}`);
+  lines.push(`# AERO INTEL Export — ${new Date(clean.timestamp).toISOString()}`);
   lines.push('# Note: CSV is a structured summary. Use JSON export for full fidelity.');
   if (clean.meta?.note) lines.push(`# ${clean.meta.note}`);
   lines.push('');
@@ -341,7 +341,7 @@ export interface CountryEvidenceBundle {
 }
 
 export const COUNTRY_EVIDENCE_PROVENANCE_DISCLAIMER =
-  'This WorldMonitor evidence bundle packages user-visible context and source metadata for analyst handoff. It is not a legal evidentiary record; verify source availability, timestamps, and claims before reuse.';
+  'This AERO INTEL evidence bundle packages user-visible context and source metadata for analyst handoff. It is not a legal evidentiary record; verify source availability, timestamps, and claims before reuse.';
 
 const SIGNAL_LABELS: Record<string, string> = {
   criticalNews: 'Critical news',
@@ -602,7 +602,7 @@ export function buildCountryEvidenceBundle(input: CountryEvidenceBundleInput): C
 
 export function renderCountryEvidenceMarkdown(bundle: CountryEvidenceBundle): string {
   const lines: string[] = [];
-  lines.push(`# WorldMonitor Evidence Bundle: ${bundle.country} (${bundle.code})`);
+  lines.push(`# AERO INTEL Evidence Bundle: ${bundle.country} (${bundle.code})`);
   lines.push('');
   lines.push(`- Context: ${markdownListValue(bundle.context)}`);
   lines.push(`- Exported at: ${markdownListValue(bundle.exportedAt)}`);

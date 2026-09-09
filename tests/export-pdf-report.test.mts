@@ -68,7 +68,7 @@ describe('buildDataReportDocument — content', () => {
     const html = buildDataReportDocument(fixture());
     assert.ok(html.length > 500, 'report should carry real content');
     assert.match(html, /<!DOCTYPE html>/i);
-    assert.ok(html.includes('WorldMonitor Data Report'));
+    assert.ok(html.includes('AERO INTEL Data Report'));
     assert.ok(html.includes('Export reflects all active sources.'));
     assert.ok(html.includes('Baseline headline'));
     assert.ok(html.includes('Cluster headline'));
@@ -86,7 +86,7 @@ describe('buildDataReportDocument — content', () => {
 
   it('renders an empty export without throwing', () => {
     const html = buildDataReportDocument({ timestamp: TS } as never);
-    assert.ok(html.includes('WorldMonitor Data Report'));
+    assert.ok(html.includes('AERO INTEL Data Report'));
     assert.ok(html.length > 200);
   });
 

@@ -1,4 +1,5 @@
 import { CANONICAL_FEEDS, INTEL_SOURCES, SOURCE_REGION_MAP } from '@/config/feeds';
+import { PRODUCT_NAME } from '@/config/product';
 import { WEB_APP_ORIGIN } from '@/config/web-origin';
 import { openExternalUrl } from '@/services/external-navigation';
 import { THEATER_PRESETS, getTheaterPreset, getTheaterPresetEnableList, resolveTheaterPresetSources, type TheaterPreset } from '@/config/theater-presets';
@@ -1057,7 +1058,7 @@ export class UnifiedSettings {
       return `
         <div class="upgrade-pro-section upgrade-pro-external" data-billing-state="external">
           <div class="upgrade-pro-title">Premium access</div>
-          <div class="upgrade-pro-desc">This access is not billed through your WorldMonitor account. No payment method or invoices are available here.</div>
+          <div class="upgrade-pro-desc">This access is not billed through your ${PRODUCT_NAME} account. No payment method or invoices are available here.</div>
         </div>
       `;
     }
@@ -1167,7 +1168,7 @@ export class UnifiedSettings {
 
     return `
       <div class="upgrade-pro-section" data-billing-state="free">
-        <div class="upgrade-pro-title">WorldMonitor Free</div>
+        <div class="upgrade-pro-title">${PRODUCT_NAME} Free</div>
         <div class="upgrade-pro-desc">Your current plan is Free. Upgrade for all panels, AI analysis, and priority data refresh.</div>
         ${checkoutConsentHtml(WEB_APP_ORIGIN)}
         <button class="upgrade-pro-cta">Upgrade to Pro</button>
@@ -1717,7 +1718,7 @@ export class UnifiedSettings {
       return;
     }
     if (notice.ctaKind === 'contact_support') {
-      window.location.href = `mailto:support@worldmonitor.app?subject=${encodeURIComponent('WorldMonitor API plan limit upgrade')}`;
+      window.location.href = `mailto:support@worldmonitor.app?subject=${encodeURIComponent(`${PRODUCT_NAME} API plan limit upgrade`)}`;
     }
   }
 
@@ -1769,7 +1770,7 @@ export class UnifiedSettings {
       return `
         <div class="panel-locked-state">
           <div class="panel-locked-icon">${upgradeIcon}</div>
-          <div class="panel-locked-desc">Create and manage API keys to access WorldMonitor data programmatically.</div>
+          <div class="panel-locked-desc">Create and manage API keys to access ${PRODUCT_NAME} data programmatically.</div>
           ${checkoutConsentHtml(WEB_APP_ORIGIN)}
           <button class="panel-locked-cta api-keys-gate-btn">Upgrade to API Starter</button>
         </div>`;
@@ -1779,7 +1780,7 @@ export class UnifiedSettings {
       <div class="api-keys-section">
         <div data-plan-limit-notices>${this.renderPlanLimitNotices()}</div>
         <div class="api-keys-header">
-          <p class="api-keys-desc">Create API keys to access WorldMonitor data programmatically. Keys are shown once on creation — store them securely.</p>
+          <p class="api-keys-desc">Create API keys to access ${PRODUCT_NAME} data programmatically. Keys are shown once on creation — store them securely.</p>
         </div>
         <div class="api-keys-create-form">
           <input type="text" class="api-keys-name-input" placeholder="Key name (e.g. my-app)" aria-label="API key name" maxlength="64" />
@@ -1991,14 +1992,14 @@ export class UnifiedSettings {
       return `
         <div class="panel-locked-state">
           <div class="panel-locked-icon">${upgradeIcon}</div>
-          <div class="panel-locked-desc">Put World Monitor panels on your own site with a scoped embed key.</div>
+          <div class="panel-locked-desc">Put ${PRODUCT_NAME} panels on your own site with a scoped embed key.</div>
         </div>`;
     }
 
     return `
       <div class="embed-keys-section">
         <div class="embed-keys-header">
-          <p class="embed-keys-desc">Embed keys authorise World Monitor panels on your site and nothing else, and each one is shown once at creation. Paste it into the <code>data-key</code> attribute of the <a class="embed-keys-docs-link" ${LEGAL_LINK_ATTR} href="${escapeHtml(`${WEB_APP_ORIGIN}/docs/embed-live-map`)}" target="_blank" rel="noopener noreferrer">embed loader</a>.</p>
+          <p class="embed-keys-desc">Embed keys authorise ${PRODUCT_NAME} panels on your site and nothing else, and each one is shown once at creation. Paste it into the <code>data-key</code> attribute of the <a class="embed-keys-docs-link" ${LEGAL_LINK_ATTR} href="${escapeHtml(`${WEB_APP_ORIGIN}/docs/embed-live-map`)}" target="_blank" rel="noopener noreferrer">embed loader</a>.</p>
         </div>
         <div class="embed-keys-note">
           <strong>These are meant to be public.</strong> An embed key sits in your page's HTML where anyone can read it — that is the point, and it is why it exists as its own credential. Never put an API key (<code>wm_…</code>) there instead: that one carries your whole REST allowance. New reads with a revoked key are denied within about a minute. Already rendered paid-only panels remain visible until reload. A live map already showing its paid tier holds a session grant for up to 30 more minutes, then drops to the free tier.
@@ -2207,7 +2208,7 @@ export class UnifiedSettings {
       return `
         <div class="panel-locked-state">
           <div class="panel-locked-icon">${upgradeIcon}</div>
-          <div class="panel-locked-desc">Connect Claude Desktop and other AI clients to your WorldMonitor account.</div>
+          <div class="panel-locked-desc">Connect Claude Desktop and other AI clients to your ${PRODUCT_NAME} account.</div>
         </div>`;
     }
 
@@ -2215,7 +2216,7 @@ export class UnifiedSettings {
       <div class="mcp-clients-section">
         <div data-plan-limit-notices>${this.renderPlanLimitNotices()}</div>
         <div class="mcp-clients-header">
-          <p class="mcp-clients-desc">Connect Claude Desktop, Cursor, and other AI clients to your WorldMonitor account. Each client gets its own credential — revoke any time.</p>
+          <p class="mcp-clients-desc">Connect Claude Desktop, Cursor, and other AI clients to your ${PRODUCT_NAME} account. Each client gets its own credential — revoke any time.</p>
         </div>
         <div class="mcp-clients-quota" id="usMcpQuota" aria-live="polite">${this.renderMcpQuotaText()}</div>
         <div class="mcp-clients-error" id="usMcpClientsError" style="display:none;"></div>
@@ -2371,7 +2372,7 @@ export class UnifiedSettings {
       setTrustedHtml(container, trustedHtml(`
         <div class="mcp-clients-empty">
           <div class="mcp-clients-empty-title">No connected MCP clients yet</div>
-          <div class="mcp-clients-empty-desc">To connect Claude Desktop or another AI client, paste this URL into the client's MCP server settings and sign in with your WorldMonitor Pro account:</div>
+          <div class="mcp-clients-empty-desc">To connect Claude Desktop or another AI client, paste this URL into the client's MCP server settings and sign in with your ${PRODUCT_NAME} Pro account:</div>
           <div class="mcp-clients-empty-url">
             <code>${escapeHtml(mcpUrl)}</code>
             <button class="btn btn-secondary mcp-clients-copy-url-btn" data-copy-value="${escapeHtml(mcpUrl)}">Copy URL</button>

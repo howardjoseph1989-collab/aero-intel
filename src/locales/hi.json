@@ -3,7 +3,7 @@
     "documentTitle": "AERO INTEL — Personal Live Intelligence Dashboard",
     "metaDescription": "रियल-टाइम ग्लोबल जानकारी का मंच। WIRED में दिखाया गया। 190 देशों में 2 मिलियन से ज्यादा लोग इस्तेमाल करते हैं। झगड़े, बाजार, सेना, OSINT एक साथ देखें।",
     "offlineTitle": "आप ऑफलाइन हैं",
-    "offlineMessage": "वर्ल्ड मॉनिटर के लिए रियल-टाइम जानकारी के लिए इंटरनेट कनेक्शन चाहिए।",
+    "offlineMessage": "AERO INTEL के लिए रियल-टाइम जानकारी के लिए इंटरनेट कनेक्शन चाहिए।",
     "offlineRetry": "फिर कोशिश करें"
   },
   "widgets": {
