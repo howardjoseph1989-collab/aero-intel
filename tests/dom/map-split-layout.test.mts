@@ -474,19 +474,19 @@ describe('map split layout (#6417)', () => {
   });
 
   describe('split layout activation threshold', () => {
-    it(`resizes the map container, not the section, from ${SPLIT_LAYOUT_MIN_WIDTH}px up`, () => {
+    it(`resizes the map section as a bottom strip from ${SPLIT_LAYOUT_MIN_WIDTH}px up`, () => {
       stubInnerWidth(SPLIT_LAYOUT_MIN_WIDTH + 100);
       const { section, container, handle } = buildHeightDom();
       manager.setupMapResize();
 
       handle.dispatchEvent(new KeyboardEvent('keydown', {
-        key: 'ArrowDown',
+        key: 'ArrowUp',
         bubbles: true,
         cancelable: true,
       }));
 
-      expect(container.style.height).toBe('540px');
-      expect(section.style.height).toBe('');
+      expect(section.style.height).toBe('540px');
+      expect(container.style.height).toBe('');
     });
 
     it('still resizes the section below the threshold', () => {
@@ -513,7 +513,7 @@ describe('map split layout (#6417)', () => {
       manager.setupMapResize();
 
       handle.dispatchEvent(new KeyboardEvent('keydown', {
-        key: 'ArrowDown',
+        key: 'ArrowUp',
         bubbles: true,
         cancelable: true,
       }));
@@ -544,17 +544,17 @@ describe('map split layout (#6417)', () => {
       const { section, container } = buildHeightDom();
       manager.setupMapResize();
 
-      expect(container.style.height).toBe('600px');
-      expect(section.style.height).toBe('');
+      expect(section.style.height).toBe('600px');
+      expect(container.style.height).toBe('');
     });
 
     it('split restore falls back to the legacy key and completes the migration', () => {
       stubInnerWidth(2000);
       localStorage.setItem('map-height', '450px');
-      const { container } = buildHeightDom();
+      const { section, container } = buildHeightDom();
       manager.setupMapResize();
 
-      expect(container.style.height).toBe('450px');
+      expect(section.style.height).toBe('450px');
       // The split key is written immediately so later stacked-mode edits to
       // 'map-height' stop steering split restores.
       expect(localStorage.getItem('map-split-height')).toBe('450px');
@@ -564,10 +564,11 @@ describe('map split layout (#6417)', () => {
     it('does not migrate a stacked legacy height for newly split web widths', () => {
       stubInnerWidth(1200);
       localStorage.setItem('map-height', '450px');
-      const { container } = buildHeightDom();
+      const { section, container } = buildHeightDom();
       manager.setupMapResize();
 
       expect(container.style.height).toBe('');
+      expect(section.style.height).toBe('280px');
       expect(localStorage.getItem('map-split-height')).toBeNull();
       expect(localStorage.getItem('map-height')).toBe('450px');
     });
@@ -584,10 +585,11 @@ describe('map split layout (#6417)', () => {
       } as never, {} as never);
       stubInnerWidth(1200);
       localStorage.setItem('map-height', '450px');
-      const { container } = buildHeightDom();
+      const { section, container } = buildHeightDom();
       manager.setupMapResize();
 
-      expect(container.style.height).toBe('450px');
+      expect(section.style.height).toBe('450px');
+      expect(container.style.height).toBe('');
       expect(localStorage.getItem('map-split-height')).toBe('450px');
     });
 
@@ -642,7 +644,8 @@ describe('map split layout (#6417)', () => {
       document.body.append(section);
       manager.setupMapResize();
 
-      expect(container.style.height).toBe('600px');
+      expect(section.style.height).toBe('600px');
+      expect(container.style.height).toBe('');
 
       // Narrow below the threshold: split inline styles must not leak into
       // the stacked layout, and the stacked height takes over.
@@ -652,11 +655,11 @@ describe('map split layout (#6417)', () => {
       expect(container.style.flex).toBe('');
       expect(section.style.height).toBe('400px');
 
-      // Widen back: the split height returns to the container.
+      // Widen back: the strip height returns on the section.
       stubInnerWidth(2000);
       lists[0]!.dispatchEvent(new Event('change'));
-      expect(section.style.height).toBe('');
-      expect(container.style.height).toBe('600px');
+      expect(section.style.height).toBe('600px');
+      expect(container.style.height).toBe('');
     });
 
     it('finishes an active height drag before clearing the departing target', () => {
@@ -664,18 +667,18 @@ describe('map split layout (#6417)', () => {
       stubInnerWidth(2000);
       localStorage.setItem('map-split-height', '600px');
       localStorage.setItem('map-height', '400px');
-      const { container, handle } = buildHeightDom();
+      const { section, handle } = buildHeightDom();
       manager.setupMapResize();
 
       handle.dispatchEvent(new MouseEvent('mousedown', { clientY: 0, bubbles: true }));
       document.dispatchEvent(new MouseEvent('mousemove', { clientY: 50, bubbles: true }));
-      expect(container.style.height).toBe('550px');
+      expect(section.style.height).toBe('450px');
 
       stubInnerWidth(800);
       lists[0]!.dispatchEvent(new Event('change'));
       document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
 
-      expect(localStorage.getItem('map-split-height')).toBe('550px');
+      expect(localStorage.getItem('map-split-height')).toBe('450px');
       expect(localStorage.getItem('map-height')).toBe('400px');
       expect(container.style.height).toBe('');
     });
@@ -688,7 +691,7 @@ describe('map split layout (#6417)', () => {
       localStorage.setItem('map-height', '450px');
       const { handle } = buildHeightDom();
       manager.setupMapResize();
-      const expectedResetHeight = `${window.innerHeight * 0.5}px`;
+      const expectedResetHeight = '280px';
 
       handle.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
       stubInnerWidth(800);

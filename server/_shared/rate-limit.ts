@@ -472,6 +472,10 @@ export const ENDPOINT_RATE_POLICIES: Record<string, EndpointRatePolicy> = {
   // response shape dictated by the NLWeb spec, served at /ask). Same anonymous
   // cheap-catalog posture as /api/a2a, same in-handler enforcement.
   '/api/ask': { limit: 60, window: '60 s' },
+  // AERO GEMINI turn broker: Google generateContent + optional TTS. Same
+  // provider-proxy budget as other in-handler LLM/upstream envelopes. Enforced
+  // in api/aero-gemini.ts via checkScopedRateLimit (key never leaves the server).
+  '/api/aero-gemini': { limit: 30, window: '60 s' },
   // Agent-skills import proxy (`api/skills/fetch-agentskills.ts`, registered
   // as `migration-pending` in api/api-route-exceptions.json). Fetches one
   // skill definition from a fixed three-host allowlist on agentskills.io.

@@ -43,7 +43,12 @@ import {
 import { BETA_MODE } from '@/config/beta';
 import { NQ_PULSE_DISCLOSURE } from '@/config/nq-context';
 import { AERO_INTEL_DEFAULT_MAP, PRODUCT_NAME } from '@/config/product';
-import { mountLiveVideoStrip, mountNewsHierarchyBar } from '@/components/LiveVideoStrip';
+import { mountAeroGeminiControl } from '@/components/AeroGeminiControl';
+import {
+  bindNewsBriefingEvents,
+  installNewsBriefingSurface,
+  NEWS_BRIEFING_PANEL_KEYS,
+} from '@/components/NewsBriefingSurface';
 import { t } from '@/services/i18n';
 import { getCurrentTheme } from '@/utils';
 import { trackCriticalBannerAction, trackCheckoutSuccess, trackCheckoutFailed, trackGateHit, trackMapViewChange, replayPendingCheckoutSuccess, replayPendingProFunnelEvents, replayPendingConversionEvents, replayPendingMissionReturn } from '@/services/analytics';
@@ -1053,6 +1058,7 @@ export class PanelLayoutManager implements AppModule {
       <div id="proBannerSlot" class="pro-banner-slot" aria-live="polite"></div>
       <div class="header" role="banner">
         <div class="header-left">
+          <span id="aeroGeminiMount" class="aero-gemini-mount"></span>
           <div class="variant-switcher">${(() => {
         const local = this.ctx.isDesktopApp || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         const inIframe = window.self !== window.top;
@@ -1164,6 +1170,7 @@ export class PanelLayoutManager implements AppModule {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+        <div id="aeroGeminiMobileMount" class="aero-gemini-mobile-mount"></div>
         <div class="mobile-menu-divider"></div>
         <div class="mobile-menu-account" aria-label="Account">
           <span class="mobile-menu-account-icon" aria-hidden="true">◯</span>
@@ -1243,8 +1250,6 @@ export class PanelLayoutManager implements AppModule {
       ).join('')}
       </div>
       <div class="dashboard-tabs-mount" id="panelTabsMount"></div>
-      <section id="liveVideoStrip" class="live-video-strip" aria-label="Live video feeds"></section>
-      <nav id="newsHierarchyBar" class="news-hierarchy-bar" aria-label="News hierarchy"></nav>
       <main id="main" tabindex="-1" class="main-content${mapRightClassActive ? ' map-right' : ''}">
         <div class="map-section${mapStartsCollapsed ? ' collapsed' : ''}" id="mapSection">
           <div class="panel-header">
@@ -1323,10 +1328,9 @@ export class PanelLayoutManager implements AppModule {
     // ordering the LCP element against the shell swap (PR #4512 review).
     markLcpDebug('wm:layout:shell-replaced');
 
-    const liveVideoMount = document.getElementById('liveVideoStrip');
-    if (liveVideoMount) mountLiveVideoStrip(liveVideoMount);
-    const newsHierarchyMount = document.getElementById('newsHierarchyBar');
-    if (newsHierarchyMount) mountNewsHierarchyBar(newsHierarchyMount);
+    const geminiMount = document.getElementById('aeroGeminiMount');
+    if (geminiMount) mountAeroGeminiControl(geminiMount);
+    bindNewsBriefingEvents();
 
     // Skip link: explicitly move focus to <main> on activation. Native
     // fragment focus on a tabindex="-1" target is inconsistent across
@@ -1342,6 +1346,7 @@ export class PanelLayoutManager implements AppModule {
     });
 
     await this.createPanels();
+    installNewsBriefingSurface();
 
     this.initPanelTabs();
     if (import.meta.env.DEV && bootShellFootprint) warnOnBootShellFootprintDrift(bootShellFootprint);
@@ -2098,6 +2103,7 @@ export class PanelLayoutManager implements AppModule {
 
     this.applyPanelSettings();
     this.applySavedPanelOrder();
+    installNewsBriefingSurface();
     this.ctx.unifiedSettings?.refreshPanelToggles();
     this.mountLiveNewsIfReady();
     this.scheduleLoadAllData();
@@ -2658,11 +2664,10 @@ export class PanelLayoutManager implements AppModule {
     this.observePanelForHydration(panel);
     if (config?.enabled) {
       this.scheduleHydrationForPanelElement(panel.getElement(), 'near');
-      // Deferred App-owned panels (Stablecoins, ETF flows, Gulf economies,
-      // etc.) are absent when the scroll frame first scans state. Hand off
-      // again after mounting so their panel-specific loader can run without a
-      // second user scroll. App gates this callback until slow-tier readiness.
       this.callbacks.primeVisiblePanelData();
+    }
+    if ((NEWS_BRIEFING_PANEL_KEYS as readonly string[]).includes(key)) {
+      installNewsBriefingSurface();
     }
   }
 
@@ -3299,17 +3304,13 @@ export class PanelLayoutManager implements AppModule {
       allOrder = [...defaultOrder];
 
       if (SITE_VARIANT !== 'happy') {
-        const liveNewsIdx = allOrder.indexOf('live-news');
-        if (liveNewsIdx > 0) {
-          allOrder.splice(liveNewsIdx, 1);
-          allOrder.unshift('live-news');
-        }
-
-        const webcamsIdx = allOrder.indexOf('live-webcams');
-        if (webcamsIdx !== -1 && webcamsIdx !== allOrder.indexOf('live-news') + 1) {
-          allOrder.splice(webcamsIdx, 1);
-          const afterNews = allOrder.indexOf('live-news') + 1;
-          allOrder.splice(afterNews, 0, 'live-webcams');
+        const pinFront = ['us-local', 'us', 'politics', 'live-webcams', 'live-news'];
+        for (const key of [...pinFront].reverse()) {
+          const idx = allOrder.indexOf(key);
+          if (idx > 0) {
+            allOrder.splice(idx, 1);
+            allOrder.unshift(key);
+          }
         }
       }
 
@@ -3715,7 +3716,10 @@ export class PanelLayoutManager implements AppModule {
 
     const activePanelKeys = Object.keys(this.ctx.panelSettings).filter(k => k !== 'map');
     const savedOrder = (panelOrder ?? this.getSavedPanelOrder()).filter(k => activePanelKeys.includes(k));
-    if (savedOrder.length === 0) return;
+    if (savedOrder.length === 0) {
+      installNewsBriefingSurface();
+      return;
+    }
 
     const seen = new Set<string>();
     const allOrder: string[] = [];
@@ -3752,6 +3756,7 @@ export class PanelLayoutManager implements AppModule {
       const el = this.getPanelElementForOrdering(key);
       if (el) bottomGrid.appendChild(el);
     });
+    installNewsBriefingSurface();
   }
 
   savePanelOrder(): { persisted: boolean } {

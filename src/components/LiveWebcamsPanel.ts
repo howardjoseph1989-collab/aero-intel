@@ -10,6 +10,11 @@ import { playAllLiveMedia, registerLiveMediaStarter, unregisterLiveMediaStarter,
 import { getLiveStreamsAlwaysOn, subscribeLiveStreamsSettingsChange } from '@/services/live-stream-settings';
 import { setTrustedHtml, trustedHtml } from '@/utils/dom-utils';
 import { isAllowedWebcamEmbedMessageOrigin } from './_live-webcams-origin';
+import {
+  AERO_INTEL_LIVE_STATION_EVENT,
+  AERO_INTEL_WEBCAM_EVENT,
+} from '@/services/aero-gemini-actions';
+import type { LiveVideoStrip } from './LiveVideoStrip';
 
 
 type WebcamRegion = 'middle-east' | 'europe' | 'asia' | 'americas' | 'space';
@@ -26,6 +31,16 @@ interface WebcamFeed {
 // Verified YouTube live stream IDs — validated Feb 2026 via title cross-check.
 // IDs may rotate; update when stale.
 const WEBCAM_FEEDS: WebcamFeed[] = [
+  // Space first — ISS Earth View + NASA TV are the AERO INTEL default wall.
+  { id: 'iss-earth', city: 'ISS Earth View', country: 'Space', region: 'space', channelHandle: '@NASA', fallbackVideoId: 'vytmBNhc9ig' },
+  { id: 'nasa-live', city: 'NASA TV', country: 'Space', region: 'space', channelHandle: '@NASA', fallbackVideoId: 'zPH5KtjJFaQ' },
+  { id: 'space-x', city: 'SpaceX', country: 'Space', region: 'space', channelHandle: '@SpaceX', fallbackVideoId: 'fO9e9jnhYK8' },
+  { id: 'space-walk', city: 'Space', country: 'Space', region: 'space', channelHandle: '@NASA', fallbackVideoId: 'fO9e9jnhYK8' },
+  // Americas — US cities after ISS / Earth.
+  { id: 'washington', city: 'Washington DC', country: 'USA', region: 'americas', channelHandle: '@AxisCommunications', fallbackVideoId: '1wV9lLe14aU' },
+  { id: 'new-york', city: 'New York', country: 'USA', region: 'americas', channelHandle: '@EarthCam', fallbackVideoId: '4qyZLflp-sI' },
+  { id: 'los-angeles', city: 'Los Angeles', country: 'USA', region: 'americas', channelHandle: '@VeniceVHotel', fallbackVideoId: 'EO_1LWqsCNE' },
+  { id: 'miami', city: 'Miami', country: 'USA', region: 'americas', channelHandle: '@FloridaLiveCams', fallbackVideoId: '5YCajRjvWCg' },
   // Middle East — Jerusalem & Tehran adjacent (conflict hotspots)
   { id: 'jerusalem', city: 'Jerusalem', country: 'Israel', region: 'middle-east', channelHandle: '@TheWesternWall', fallbackVideoId: 'e34xb-Fbl0U' },
   { id: 'middle-east', city: 'Middle East', country: 'Multi', region: 'middle-east', channelHandle: '@MiddleEastCams', fallbackVideoId: 'oxT5R6I0N6E' },
@@ -38,22 +53,12 @@ const WEBCAM_FEEDS: WebcamFeed[] = [
   { id: 'paris', city: 'Paris', country: 'France', region: 'europe', channelHandle: '@PalaisIena', fallbackVideoId: 'OzYp4NRZlwQ' },
   { id: 'st-petersburg', city: 'St. Petersburg', country: 'Russia', region: 'europe', channelHandle: '@SPBLiveCam', fallbackVideoId: 'CjtIYbmVfck' },
   { id: 'london', city: 'London', country: 'UK', region: 'europe', channelHandle: '@EarthCam', fallbackVideoId: 'Lxqcg1qt0XU' },
-  // Americas
-  { id: 'washington', city: 'Washington DC', country: 'USA', region: 'americas', channelHandle: '@AxisCommunications', fallbackVideoId: '1wV9lLe14aU' },
-  { id: 'new-york', city: 'New York', country: 'USA', region: 'americas', channelHandle: '@EarthCam', fallbackVideoId: '4qyZLflp-sI' },
-  { id: 'los-angeles', city: 'Los Angeles', country: 'USA', region: 'americas', channelHandle: '@VeniceVHotel', fallbackVideoId: 'EO_1LWqsCNE' },
-  { id: 'miami', city: 'Miami', country: 'USA', region: 'americas', channelHandle: '@FloridaLiveCams', fallbackVideoId: '5YCajRjvWCg' },
   // Asia-Pacific — Taipei first (strait hotspot), then Shanghai, Tokyo, Seoul
   { id: 'taipei', city: 'Taipei', country: 'Taiwan', region: 'asia', channelHandle: '@JackyWuTaipei', fallbackVideoId: 'z_fY1pj1VBw' },
   { id: 'shanghai', city: 'Shanghai', country: 'China', region: 'asia', channelHandle: '@SkylineWebcams', fallbackVideoId: '76EwqI5XZIc' },
   { id: 'tokyo', city: 'Tokyo', country: 'Japan', region: 'asia', channelHandle: '@TokyoLiveCam4K', fallbackVideoId: '_k-5U7IeK8g' },
   { id: 'seoul', city: 'Seoul', country: 'South Korea', region: 'asia', channelHandle: '@UNvillage_live', fallbackVideoId: '-JhoMGoAfFc' },
   { id: 'sydney', city: 'Sydney', country: 'Australia', region: 'asia', channelHandle: '@WebcamSydney', fallbackVideoId: '7pcL-0Wo77U' },
-  // Space
-  { id: 'iss-earth', city: 'ISS Earth View', country: 'Space', region: 'space', channelHandle: '@NASA', fallbackVideoId: 'vytmBNhc9ig' },
-  { id: 'nasa-live', city: 'NASA TV', country: 'Space', region: 'space', channelHandle: '@NASA', fallbackVideoId: 'zPH5KtjJFaQ' },
-  { id: 'space-x', city: 'SpaceX', country: 'Space', region: 'space', channelHandle: '@SpaceX', fallbackVideoId: 'fO9e9jnhYK8' },
-  { id: 'space-walk', city: 'Space', country: 'Space', region: 'space', channelHandle: '@NASA', fallbackVideoId: 'fO9e9jnhYK8' },
 ];
 
 const MAX_GRID_CELLS = 4;
@@ -65,7 +70,7 @@ const IDLE_ACTIVITY_EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart', 'm
 type ViewMode = 'grid' | 'single';
 type RegionFilter = 'all' | WebcamRegion;
 
-const ALL_REGIONS: RegionFilter[] = ['all', 'middle-east', 'europe', 'americas', 'asia', 'space'];
+const ALL_REGIONS: RegionFilter[] = ['all', 'space', 'americas', 'europe', 'middle-east', 'asia'];
 
 interface WebcamPrefs {
   regionFilter: RegionFilter;
@@ -129,6 +134,13 @@ export class LiveWebcamsPanel extends Panel {
   private readonly forceSingleView = !isDesktopRuntime() && isMobileDevice();
   private readonly EMBED_READY_TIMEOUT_MS = 15000;
   private boundEmbedMessageHandler: (e: MessageEvent) => void;
+  private liveTvStrip: LiveVideoStrip | null = null;
+  private liveTvMount: HTMLElement | null = null;
+  private readonly boundWebcamCommand = (event: Event) => this.applyGeminiWebcam(event);
+  private readonly boundLiveStationCommand = (event: Event) => {
+    const stationId = String((event as CustomEvent<{ stationId?: string }>).detail?.stationId || '');
+    void this.ensureLiveTvDock(stationId || undefined);
+  };
 
   constructor() {
     super({ id: 'live-webcams', title: t('panels.liveWebcams'), className: 'panel-wide', closable: true, collapsible: true, infoTooltip: t('components.liveWebcams.infoTooltip') });
@@ -141,6 +153,7 @@ export class LiveWebcamsPanel extends Panel {
 
     this.createFullscreenButton();
     this.createToolbar();
+    this.createLiveTvDock();
     this.setupIntersectionObserver();
     this.setupIdleDetection();
     subscribeStreamQualityChange(() => this.render());
@@ -154,6 +167,8 @@ export class LiveWebcamsPanel extends Panel {
     });
     this.boundEmbedMessageHandler = (e) => this.handleEmbedMessage(e);
     window.addEventListener('message', this.boundEmbedMessageHandler);
+    window.addEventListener(AERO_INTEL_WEBCAM_EVENT, this.boundWebcamCommand);
+    window.addEventListener(AERO_INTEL_LIVE_STATION_EVENT, this.boundLiveStationCommand);
     this.render();
     registerLiveMediaStarter('live-webcams', this.boundPlayAllStarter);
     document.addEventListener('keydown', this.boundFullscreenEscHandler);
@@ -212,7 +227,7 @@ export class LiveWebcamsPanel extends Panel {
     return WEBCAM_FEEDS.filter(f => f.region === this.regionFilter);
   }
 
-  private static readonly ALL_GRID_IDS = ['jerusalem', 'middle-east', 'kyiv', 'washington'];
+  private static readonly ALL_GRID_IDS = ['iss-earth', 'nasa-live', 'washington', 'new-york'];
 
   private get gridFeeds(): WebcamFeed[] {
     if (this.regionFilter === 'all') {
@@ -232,11 +247,11 @@ export class LiveWebcamsPanel extends Panel {
 
     const regions: { key: RegionFilter; label: string }[] = [
       { key: 'all', label: t('components.webcams.regions.all') },
-      { key: 'middle-east', label: t('components.webcams.regions.mideast') },
-      { key: 'europe', label: t('components.webcams.regions.europe') },
-      { key: 'americas', label: t('components.webcams.regions.americas') },
-      { key: 'asia', label: t('components.webcams.regions.asia') },
       { key: 'space', label: t('components.webcams.regions.space') },
+      { key: 'americas', label: t('components.webcams.regions.americas') },
+      { key: 'europe', label: t('components.webcams.regions.europe') },
+      { key: 'middle-east', label: t('components.webcams.regions.mideast') },
+      { key: 'asia', label: t('components.webcams.regions.asia') },
     ];
 
     regions.forEach(({ key, label }) => {
@@ -277,6 +292,51 @@ export class LiveWebcamsPanel extends Panel {
     this.toolbar.appendChild(regionGroup);
     this.toolbar.appendChild(viewGroup);
     this.element.insertBefore(this.toolbar, this.content);
+  }
+
+  private createLiveTvDock(): void {
+    const dock = document.createElement('details');
+    dock.className = 'webcam-live-tv-dock';
+    const summary = document.createElement('summary');
+    summary.className = 'webcam-live-tv-summary';
+    summary.textContent = 'Live TV';
+    const mount = document.createElement('div');
+    mount.id = 'webcamLiveTvDock';
+    mount.className = 'webcam-live-tv-mount';
+    dock.append(summary, mount);
+    this.liveTvMount = mount;
+    dock.addEventListener('toggle', () => {
+      if (dock.open) void this.ensureLiveTvDock();
+    });
+    this.element.appendChild(dock);
+  }
+
+  private async ensureLiveTvDock(stationId?: string): Promise<void> {
+    const dock = this.element.querySelector<HTMLDetailsElement>('.webcam-live-tv-dock');
+    if (dock) dock.open = true;
+    if (!this.liveTvStrip && this.liveTvMount) {
+      const { mountLiveVideoStrip } = await import('@/components/LiveVideoStrip');
+      if (!this.liveTvStrip && this.liveTvMount) {
+        this.liveTvStrip = mountLiveVideoStrip(this.liveTvMount);
+      }
+    }
+    if (stationId) this.liveTvStrip?.selectStation(stationId);
+  }
+
+  private applyGeminiWebcam(event: Event): void {
+    const detail = (event as CustomEvent<{ feedId?: string; region?: string }>).detail || {};
+    if (typeof detail.region === 'string' && ALL_REGIONS.includes(detail.region as RegionFilter)) {
+      this.setRegionFilter(detail.region as RegionFilter);
+    }
+    if (typeof detail.feedId === 'string') {
+      const feed = WEBCAM_FEEDS.find((item) => item.id === detail.feedId);
+      if (feed) {
+        if (this.regionFilter !== 'all' && feed.region !== this.regionFilter) {
+          this.setRegionFilter(feed.region);
+        }
+        this.playFeed(feed, 'settings');
+      }
+    }
   }
 
   private setRegionFilter(filter: RegionFilter): void {
@@ -897,6 +957,8 @@ export class LiveWebcamsPanel extends Panel {
     document.removeEventListener('visibilitychange', this.boundVisibilityHandler);
     document.removeEventListener('keydown', this.boundFullscreenEscHandler);
     window.removeEventListener('message', this.boundEmbedMessageHandler);
+    window.removeEventListener(AERO_INTEL_WEBCAM_EVENT, this.boundWebcamCommand);
+    window.removeEventListener(AERO_INTEL_LIVE_STATION_EVENT, this.boundLiveStationCommand);
     IDLE_ACTIVITY_EVENTS.forEach(event => {
       document.removeEventListener(event, this.boundIdleResetHandler);
     });

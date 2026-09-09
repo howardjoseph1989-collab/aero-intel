@@ -12,7 +12,9 @@ Copyright (C) World Monitor contributors
 Licensed under the GNU Affero General Public License v3.0.
 
 This repository keeps the AGPL-3.0 LICENSE from upstream. Modifications that
-rebrand the product to AERO INTEL, add a live video strip, change default news
-order, and adjust reading chrome are additional work on that same licensed base.
+rebrand the product to AERO INTEL, add AERO GEMINI (turn-based Google AI Studio
+voice+tools chrome), relocate live TV into the webcam dock, default ISS/Earth
+webcams, unify the US-first news briefing, and place Global Situation as a
+bottom strip are additional work on that same licensed base.
 
 Required attribution: credit koala73/worldmonitor as the upstream project.
