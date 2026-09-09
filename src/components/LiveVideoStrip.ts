@@ -3,6 +3,9 @@ import {
   DEFAULT_LIVE_VIDEO_STATION_ID,
   LIVE_VIDEO_STATIONS,
   getLiveVideoStation,
+  isYoutubeEmbedFailure,
+  pickLiveVideoPlayback,
+  pickPlaybackAfterYoutubeFailure,
   youtubeEmbedUrl,
   youtubeLivePageUrl,
   type LiveVideoStation,
@@ -21,6 +24,8 @@ export class LiveVideoStrip {
   private activeId = DEFAULT_LIVE_VIDEO_STATION_ID;
   private muted = true;
   private generation = 0;
+  private youtubeWatchCleanup: (() => void) | null = null;
+  private hlsPlayer: import('hls.js').default | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -96,7 +101,34 @@ export class LiveVideoStrip {
     }
   }
 
+  private clearMedia(): void {
+    this.youtubeWatchCleanup?.();
+    this.youtubeWatchCleanup = null;
+    if (this.hlsPlayer) {
+      this.hlsPlayer.destroy();
+      this.hlsPlayer = null;
+    }
+  }
+
+  private applyPlaybackChoice(
+    station: LiveVideoStation,
+    choice: ReturnType<typeof pickLiveVideoPlayback>,
+    reason: string,
+    hlsAfterYoutubeError = false,
+  ): void {
+    if (choice.kind === 'youtube') {
+      this.renderYoutube(station, choice.videoId);
+      return;
+    }
+    if (choice.kind === 'hls') {
+      this.renderHls(station, choice.hlsUrl, hlsAfterYoutubeError);
+      return;
+    }
+    this.showFallback(station, reason);
+  }
+
   private showFallback(station: LiveVideoStation, reason: string): void {
+    this.clearMedia();
     const watchUrl = sanitizeUrl(youtubeLivePageUrl(station.handle));
     const wrap = document.createElement('div');
     wrap.className = 'live-video-strip-fallback';
@@ -115,56 +147,105 @@ export class LiveVideoStrip {
     this.playerEl.replaceChildren(wrap);
   }
 
+  private fallbackFromYoutube(station: LiveVideoStation, token: number, reason: string): void {
+    if (token !== this.generation) return;
+    this.applyPlaybackChoice(station, pickPlaybackAfterYoutubeFailure(station), reason, true);
+  }
+
   private renderYoutube(station: LiveVideoStation, videoId: string): void {
+    const token = this.generation;
+    this.clearMedia();
     const iframe = document.createElement('iframe');
     iframe.className = 'live-video-strip-frame';
-    iframe.src = youtubeEmbedUrl(videoId, this.muted);
+    iframe.dataset.liveSource = 'youtube';
+    iframe.dataset.station = station.id;
+    iframe.src = youtubeEmbedUrl(videoId, this.muted, window.location.origin);
     iframe.title = `${station.name} live`;
     iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
     iframe.addEventListener('error', () => {
-      this.showFallback(station, 'player failed to load');
+      this.fallbackFromYoutube(station, token, 'player failed to load');
     });
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== iframe.contentWindow) return;
+      const code = youtubePlayerErrorCode(event.data);
+      if (code === null) return;
+      const reason = isYoutubeEmbedFailure(code) || code > 0
+        ? `youtube error ${code}`
+        : 'unavailable';
+      this.fallbackFromYoutube(station, token, reason);
+    };
+    window.addEventListener('message', onMessage);
+    this.youtubeWatchCleanup = () => window.removeEventListener('message', onMessage);
+
+    iframe.addEventListener('load', () => {
+      try {
+        iframe.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: videoId }), '*');
+      } catch {
+        /* ignore handshake failures; onError still arrives when the API is ready */
+      }
+    });
+
     this.playerEl.replaceChildren(iframe);
   }
 
-  private renderHls(station: LiveVideoStation, hlsUrl: string): void {
+  private renderHls(station: LiveVideoStation, hlsUrl: string, afterYoutubeError = false): void {
+    const token = this.generation;
+    this.clearMedia();
     const video = document.createElement('video');
     video.className = 'live-video-strip-video';
+    video.dataset.liveSource = 'hls';
+    video.dataset.station = station.id;
     video.muted = this.muted;
     video.autoplay = true;
     video.playsInline = true;
     video.controls = true;
     video.setAttribute('aria-label', `${station.name} live stream`);
 
-    const note = document.createElement('p');
-    note.className = 'live-video-strip-hls-note';
-    note.textContent = 'YouTube embed unavailable — playing documented HLS fallback.';
+    const failHls = (reason: string) => {
+      if (token !== this.generation) return;
+      this.showFallback(station, reason);
+    };
 
     const applyHls = async () => {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = hlsUrl;
+        video.addEventListener('error', () => failHls('HLS blocked'));
+        void video.play()?.catch(() => {});
         return;
       }
       try {
         const { default: Hls } = await import('hls.js');
+        if (token !== this.generation) return;
         if (!Hls.isSupported()) {
-          this.showFallback(station, 'HLS not supported');
+          failHls('HLS not supported');
           return;
         }
-        const hls = new Hls();
+        const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+        this.hlsPlayer = hls;
         hls.loadSource(hlsUrl);
         hls.attachMedia(video);
-        hls.on(Hls.Events.ERROR, () => {
-          this.showFallback(station, 'HLS blocked');
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          void video.play()?.catch(() => {});
+        });
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) failHls('HLS blocked');
         });
       } catch {
-        this.showFallback(station, 'HLS unavailable');
+        failHls('HLS unavailable');
       }
     };
 
-    this.playerEl.replaceChildren(video, note);
+    if (afterYoutubeError) {
+      const note = document.createElement('p');
+      note.className = 'live-video-strip-hls-note';
+      note.textContent = 'YouTube embed unavailable — playing documented HLS fallback.';
+      this.playerEl.replaceChildren(video, note);
+    } else {
+      this.playerEl.replaceChildren(video);
+    }
     void applyHls();
   }
 
@@ -172,6 +253,7 @@ export class LiveVideoStrip {
     const station = getLiveVideoStation(id);
     if (!station) return;
     const token = ++this.generation;
+    this.clearMedia();
     this.playerEl.replaceChildren();
     const loading = document.createElement('div');
     loading.className = 'live-video-strip-loading';
@@ -181,17 +263,31 @@ export class LiveVideoStrip {
     const info = await fetchLiveVideoInfo(station.handle);
     if (token !== this.generation) return;
 
-    const videoId = info.videoId || station.fallbackVideoId;
-    if (videoId) {
-      this.renderYoutube(station, videoId);
-      return;
-    }
-    if (station.hlsUrl) {
-      this.renderHls(station, station.hlsUrl);
-      return;
-    }
-    this.showFallback(station, 'no live video id');
+    // Live YouTube id → documented HLS → stale fallbackVideoId. Never let a
+    // dead fallback embed (e.g. LiveNOW QaftgYkG-ek) block Fox HLS on Vite.
+    this.applyPlaybackChoice(
+      station,
+      pickLiveVideoPlayback(station, info.videoId),
+      'no live video id',
+    );
   }
+}
+
+function youtubePlayerErrorCode(raw: unknown): number | null {
+  let data = raw;
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data);
+    } catch {
+      return null;
+    }
+  }
+  if (!data || typeof data !== 'object') return null;
+  const rec = data as { event?: unknown; info?: unknown };
+  if (rec.event !== 'onError' && rec.event !== 'error') return null;
+  if (typeof rec.info === 'number') return rec.info;
+  if (typeof rec.info === 'string' && /^\d+$/.test(rec.info)) return Number(rec.info);
+  return 0;
 }
 
 export function mountLiveVideoStrip(root: HTMLElement): LiveVideoStrip {
