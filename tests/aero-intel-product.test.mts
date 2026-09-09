@@ -12,6 +12,9 @@ import {
 import {
   DEFAULT_LIVE_VIDEO_STATION_ID,
   LIVE_VIDEO_STATIONS,
+  getLiveVideoStation,
+  pickLiveVideoPlayback,
+  pickPlaybackAfterYoutubeFailure,
   youtubeEmbedUrl,
   youtubeLivePageUrl,
 } from '../src/config/live-video-stations.ts';
@@ -61,9 +64,50 @@ describe('AERO INTEL live video stations', () => {
     const fox = LIVE_VIDEO_STATIONS[0]!;
     assert.equal(fox.handle, '@FoxNews');
     assert.ok(fox.hlsUrl?.includes('foxnews.com'));
+    assert.equal(fox.fallbackVideoId, undefined);
     assert.equal(youtubeLivePageUrl('@FoxNews'), 'https://www.youtube.com/@FoxNews/live');
     assert.match(youtubeEmbedUrl('abc', true), /mute=1/);
     assert.match(youtubeEmbedUrl('abc', false), /mute=0/);
+    assert.match(youtubeEmbedUrl('abc', true), /enablejsapi=1/);
+  });
+
+  it('does not keep the LiveNOW QaftgYkG-ek id as a Fox fallback', () => {
+    const fox = getLiveVideoStation('fox-news');
+    assert.ok(fox);
+    assert.notEqual(fox.fallbackVideoId, 'QaftgYkG-ek');
+    assert.doesNotMatch(read('src/config/live-video-stations.ts'), /fallbackVideoId:\s*'QaftgYkG-ek'/);
+    assert.doesNotMatch(read('src/components/LiveVideoStrip.ts'), /info\.videoId \|\| station\.fallbackVideoId/);
+  });
+
+  it('plays documented HLS when YouTube live detection returns no id', () => {
+    const fox = getLiveVideoStation('fox-news')!;
+    assert.deepEqual(pickLiveVideoPlayback(fox, null), {
+      kind: 'hls',
+      hlsUrl: fox.hlsUrl,
+    });
+    assert.deepEqual(pickLiveVideoPlayback(fox, 'dQw4w9wgGcQ'), {
+      kind: 'youtube',
+      videoId: 'dQw4w9wgGcQ',
+    });
+  });
+
+  it('does not let a stale fallbackVideoId preempt HLS', () => {
+    const station = {
+      fallbackVideoId: 'QaftgYkG-ek',
+      hlsUrl: 'https://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8',
+    };
+    assert.equal(pickLiveVideoPlayback(station, null).kind, 'hls');
+    assert.equal(pickLiveVideoPlayback(station, undefined).kind, 'hls');
+    assert.equal(pickPlaybackAfterYoutubeFailure(station).kind, 'hls');
+  });
+
+  it('uses fallbackVideoId only when there is no live id and no HLS', () => {
+    const station = { fallbackVideoId: 'S-lFBzloL2Y' };
+    assert.deepEqual(pickLiveVideoPlayback(station, null), {
+      kind: 'youtube',
+      videoId: 'S-lFBzloL2Y',
+    });
+    assert.deepEqual(pickPlaybackAfterYoutubeFailure(station), { kind: 'unavailable' });
   });
 });
 

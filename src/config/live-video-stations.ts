@@ -1,14 +1,16 @@
 /**
  * AERO INTEL top-strip live stations.
  *
- * Embeds prefer the official YouTube live player (`/api/youtube/live` resolves
- * the current video id for a channel handle). When YouTube blocks the embed
- * (error 101/150, bot-check, or no live id), the strip falls back to a documented
- * HLS URL when one exists, then to an "Open on YouTube" link.
+ * Playback order (relay-less Vite included):
+ * 1. Current YouTube live id from `/api/youtube/live` when one is found
+ * 2. Documented HLS URL when live detection fails or the embed is blocked
+ * 3. fallbackVideoId only when there is no HLS — never ahead of HLS
+ * 4. "Open on YouTube" link
  *
  * Official / documented sources (do not invent unpublished stream keys):
  * - Fox News YouTube: https://www.youtube.com/@FoxNews/live
  *   HLS preview (existing LiveNews catalog): https://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8
+ *   Do not use QaftgYkG-ek — that is LiveNOW from FOX, not @FoxNews live.
  * - CNN YouTube: https://www.youtube.com/@CNN/live
  * - MSNBC YouTube: https://www.youtube.com/@MSNBC/live
  * - ABC News YouTube: https://www.youtube.com/@ABCNews/live
@@ -22,11 +24,42 @@ export interface LiveVideoStation {
   id: string;
   name: string;
   handle: string;
-  /** Optional known YouTube video id used only when live detection fails. */
+  /** Optional known YouTube video id used only when live detection *and* HLS fail. */
   fallbackVideoId?: string;
   /** Optional direct HLS, reused from LiveNewsPanel's documented map. */
   hlsUrl?: string;
   optional?: boolean;
+}
+
+export type LiveVideoPlaybackChoice =
+  | { kind: 'youtube'; videoId: string }
+  | { kind: 'hls'; hlsUrl: string }
+  | { kind: 'unavailable' };
+
+/**
+ * Choose the strip player. A stale fallbackVideoId must not preempt documented HLS.
+ * YouTube error 101/150/"unavailable" should call {@link pickPlaybackAfterYoutubeFailure}.
+ */
+export function pickLiveVideoPlayback(
+  station: Pick<LiveVideoStation, 'hlsUrl' | 'fallbackVideoId'>,
+  liveVideoId: string | null | undefined,
+): LiveVideoPlaybackChoice {
+  if (liveVideoId) return { kind: 'youtube', videoId: liveVideoId };
+  if (station.hlsUrl) return { kind: 'hls', hlsUrl: station.hlsUrl };
+  if (station.fallbackVideoId) return { kind: 'youtube', videoId: station.fallbackVideoId };
+  return { kind: 'unavailable' };
+}
+
+export function pickPlaybackAfterYoutubeFailure(
+  station: Pick<LiveVideoStation, 'hlsUrl'>,
+): LiveVideoPlaybackChoice {
+  if (station.hlsUrl) return { kind: 'hls', hlsUrl: station.hlsUrl };
+  return { kind: 'unavailable' };
+}
+
+/** YouTube IFrame API: 100 not found, 101/150 embedding disabled. */
+export function isYoutubeEmbedFailure(code: number): boolean {
+  return code === 100 || code === 101 || code === 150;
 }
 
 export const DEFAULT_LIVE_VIDEO_STATION_ID = 'fox-news';
@@ -36,7 +69,6 @@ export const LIVE_VIDEO_STATIONS: readonly LiveVideoStation[] = [
     id: 'fox-news',
     name: 'Fox News',
     handle: '@FoxNews',
-    fallbackVideoId: 'QaftgYkG-ek',
     hlsUrl: 'https://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8',
   },
   {
@@ -96,13 +128,15 @@ export function youtubeLivePageUrl(handle: string): string {
   return `https://www.youtube.com/${clean}/live`;
 }
 
-export function youtubeEmbedUrl(videoId: string, muted = true): string {
+export function youtubeEmbedUrl(videoId: string, muted = true, origin?: string): string {
   const params = new URLSearchParams({
     autoplay: '1',
     mute: muted ? '1' : '0',
     playsinline: '1',
     rel: '0',
     modestbranding: '1',
+    enablejsapi: '1',
   });
+  if (origin) params.set('origin', origin);
   return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
 }
