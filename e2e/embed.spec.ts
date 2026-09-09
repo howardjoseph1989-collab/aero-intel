@@ -144,7 +144,7 @@ test.describe('public map embed', () => {
 
     await page.goto(embedPath);
 
-    await expect(page.locator('.wm-embed-attribution')).toHaveText('Live map by World Monitor');
+    await expect(page.locator('.wm-embed-attribution')).toHaveText('Live map by AERO INTEL');
     await expectCurrentMapRenderer(page);
     await expect(page.locator('.map-controls, .time-slider, .layer-toggles, .map-legend')).toHaveCount(0);
     await expect(page.locator('body')).toHaveAttribute('data-embed-ready', 'true');
@@ -216,7 +216,7 @@ test.describe('public map embed', () => {
         <body style="margin:0;background:#f7f7f7">
           <main style="max-width:860px;margin:24px auto;font-family:sans-serif">
             <h1>Host page</h1>
-            <iframe id="wm" src="${embedUrl}" title="World Monitor live map" style="width:100%;height:420px;border:0;display:block"></iframe>
+            <iframe id="wm" src="${embedUrl}" title="AERO INTEL live map" style="width:100%;height:420px;border:0;display:block"></iframe>
           </main>
         </body>
       </html>
@@ -232,7 +232,7 @@ test.describe('public map embed', () => {
       const embedHeaders = await embedResponse.allHeaders();
 
       const frame = page.frameLocator('#wm');
-      await expect(frame.locator('.wm-embed-attribution')).toHaveText('Live map by World Monitor');
+      await expect(frame.locator('.wm-embed-attribution')).toHaveText('Live map by AERO INTEL');
       await expectCurrentMapRendererInFrame(frame, page);
       await expect(frame.locator('.map-controls, .time-slider, .layer-toggles, .map-legend')).toHaveCount(0);
       await expect(frame.locator('body')).toHaveAttribute('data-embed-ready', 'true');
@@ -507,7 +507,7 @@ test.describe('allowlisted panel embeds', () => {
 
     try {
       await page.goto(host.url);
-      const frame = page.frameLocator('iframe[title="World Monitor embed"]');
+      const frame = page.frameLocator('iframe[title="AERO INTEL embed"]');
       await expect(frame.locator('body')).toHaveAttribute('data-embed-panel', 'chokepoint-strip');
       await expect(frame.locator('body')).toHaveAttribute('data-embed-ready', 'true');
       await expect(frame.locator('.wm-embed-chokepoints')).toBeVisible();
@@ -532,7 +532,7 @@ test.describe('allowlisted panel embeds', () => {
 
     try {
       await page.goto(host.url);
-      const frame = page.frameLocator('iframe[title="World Monitor embed"]');
+      const frame = page.frameLocator('iframe[title="AERO INTEL embed"]');
       await expect(frame.locator('body')).toHaveAttribute('data-embed-panel', 'fear-greed');
       await expect(frame.locator('body')).toHaveAttribute('data-embed-ready', 'true');
       await expect(frame.locator('.wm-embed-fear-greed')).toBeVisible();
@@ -566,7 +566,7 @@ test.describe('allowlisted panel embeds', () => {
 
     try {
       await page.goto(host.url);
-      const frame = page.frameLocator('iframe[title="World Monitor embed"]');
+      const frame = page.frameLocator('iframe[title="AERO INTEL embed"]');
       await expect(frame.locator('body')).toHaveAttribute('data-embed-ready', 'true');
       await expect(frame.locator('.wm-embed-chokepoints')).toBeVisible();
       expect(keyedRequests.some((key) => key === embedKey)).toBe(true);
@@ -594,7 +594,7 @@ test.describe('allowlisted panel embeds', () => {
     `);
     try {
       await page.goto(legacy.url);
-      await expect(page.frameLocator('iframe[title="World Monitor embed"]').locator('body'))
+      await expect(page.frameLocator('iframe[title="AERO INTEL embed"]').locator('body'))
         .toHaveAttribute('data-embed-ready', 'true');
       await expect
         .poll(() => warnings.filter((line) => line.includes('worldmonitor-embed')).length)
@@ -617,7 +617,7 @@ test.describe('allowlisted panel embeds', () => {
     `);
     try {
       await page.goto(scoped.url);
-      await expect(page.frameLocator('iframe[title="World Monitor embed"]').locator('body'))
+      await expect(page.frameLocator('iframe[title="AERO INTEL embed"]').locator('body'))
         .toHaveAttribute('data-embed-ready', 'true');
       expect(warnings.filter((line) => line.includes('worldmonitor-embed'))).toEqual([]);
     } finally {

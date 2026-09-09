@@ -85,7 +85,7 @@ function extractOpen() {
 
 let mcpAccess = false;
 let embedAccess = false;
-let accountRole = undefined;
+let accountRole ;
 const Harness = extractOpen()(
   () => ({ planKey: mcpAccess || embedAccess ? 'pro_monthly' : 'free' }),
   () => 'ready',

@@ -1,5 +1,6 @@
 {
-  "name": "world-monitor",
+  "name": "aero-intel",
+  "description": "AERO INTEL — personal live intelligence dashboard for geopolitics, markets, and live US news video.",
   "private": true,
   "version": "2.10.0",
   "license": "AGPL-3.0-only",

@@ -24,6 +24,9 @@ const IRAN_ATTACKS_ENABLED = typeof window !== 'undefined' && import.meta.env.VI
 const FULL_PANELS: Record<string, PanelConfig> = {
   map: { name: 'Global Map', enabled: true, priority: 1 },
   'live-news': { name: 'Live News', enabled: true, priority: 1 },
+  'us-local': { name: 'US Local', enabled: true, priority: 1 },
+  us: { name: 'US National', enabled: true, priority: 1 },
+  politics: { name: 'World / International', enabled: true, priority: 1 },
   'live-webcams': { name: 'Live Webcams', enabled: true, priority: 1 },
   'windy-webcams': { name: 'Windy Live Webcam', enabled: false, priority: 2 },
   insights: { name: 'AI Insights', enabled: true, priority: 1 },
@@ -39,8 +42,6 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'escalation-correlation': { name: 'Escalation Monitor', enabled: true, priority: 2 },
   'economic-correlation': { name: 'Economic Warfare', enabled: true, priority: 2 },
   'disaster-correlation': { name: 'Disaster Cascade', enabled: true, priority: 2 },
-  politics: { name: 'World News', enabled: true, priority: 1 },
-  us: { name: 'United States', enabled: true, priority: 1 },
   europe: { name: 'Europe', enabled: true, priority: 1 },
   middleeast: { name: 'Middle East', enabled: true, priority: 1 },
   africa: { name: 'Africa', enabled: true, priority: 1 },

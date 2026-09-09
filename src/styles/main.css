@@ -1,6 +1,7 @@
 @import './rtl-overrides.css';
 @import './panels.css';
 @import './route-explorer.css';
+@import './live-video-strip.css';
 
 /* ============================================================
    Theme Colors — overridden by [data-theme="light"] below
@@ -9,22 +10,22 @@
   /* Backgrounds */
   --bg: #0a0a0a;
   --bg-secondary: #111;
-  --surface: #141414;
+  --surface: rgba(10, 10, 10, 0.78);
   --surface-hover: #1e1e1e;
   --surface-active: #1a1a2e;
 
   /* Borders */
-  --border: #2a2a2a;
-  --border-strong: #444;
-  --border-subtle: #1a1a1a;
+  --border: #ffffff;
+  --border-strong: #ffffff;
+  --border-subtle: rgba(255, 255, 255, 0.45);
 
-  /* Text */
-  --text: #e8e8e8;
-  --text-secondary: #ccc;
-  --text-dim: #888;
-  --text-muted: #838383; /* was #666 (3.2:1 on --surface); AA 4.9:1 */
-  --text-faint: #7f7f7f; /* was #555 (2.5:1); AA 4.6:1 */
-  --text-ghost: #666; /* was #444 (1.9:1); 3.2:1 — decorative/large text only, never body copy */
+  /* Text — white, high-contrast for long reading */
+  --text: #ffffff;
+  --text-secondary: #ffffff;
+  --text-dim: #f2f2f2;
+  --text-muted: #ededed;
+  --text-faint: #e8e8e8;
+  --text-ghost: #d0d0d0;
   --accent: #fff;
 
   /* Overlays & shadows */
@@ -44,9 +45,9 @@
   /* Input */
   --input-bg: #1a1a1a;
 
-  /* Panels */
-  --panel-bg: #141414;
-  --panel-border: #2a2a2a;
+  /* Panels — AERO INTEL high-vis reading chrome */
+  --panel-bg: rgba(8, 8, 8, 0.82);
+  --panel-border: #ffffff;
 
   /* Map */
   --map-bg: #020a08;
@@ -337,8 +338,8 @@ canvas,
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: rgba(8, 8, 8, 0.88);
+  border-bottom: 2px solid #fff;
   height: 40px;
   flex-shrink: 0;
   /* Lift the header's stacking context above the content grid so its
@@ -677,18 +678,18 @@ canvas,
 }
 
 .logo {
-  font-weight: bold;
-  font-size: calc(14px * var(--wm-panel-effective-scale, 1));
+  font-weight: 800;
+  font-size: calc(18px * var(--wm-panel-effective-scale, 1));
   letter-spacing: 2px;
-  color: var(--accent);
+  color: #fff;
 }
 
 .logo-mobile {
   display: none;
-  font-weight: bold;
-  font-size: calc(14px * var(--wm-panel-effective-scale, 1));
+  font-weight: 800;
+  font-size: calc(16px * var(--wm-panel-effective-scale, 1));
   letter-spacing: 2px;
-  color: var(--accent);
+  color: #fff;
 }
 
 .version {
@@ -1486,8 +1487,8 @@ canvas,
   min-height: 350px;
   max-height: 90vh;
   /* Allow resize up to 90% of viewport */
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 2px solid #fff;
+  background: transparent;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -1509,6 +1510,7 @@ canvas,
 .map-section .map-container {
   flex: 1;
   position: relative;
+  background: var(--map-bg);
 }
 
 .map-resize-handle {
@@ -1838,8 +1840,9 @@ canvas,
 .panel {
   /* Panel overrides are absolute: unset panels follow the global preference. */
   --wm-panel-effective-scale: var(--wm-panel-font-scale, var(--wm-font-scale, 1));
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border: 2px solid #fff;
+  backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2184,11 +2187,11 @@ body.panel-resize-active iframe {
 }
 
 .panel-title {
-  font-size: calc(11px * var(--wm-panel-effective-scale, 1));
-  font-weight: 600;
+  font-size: calc(14px * var(--wm-panel-effective-scale, 1));
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text);
+  color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

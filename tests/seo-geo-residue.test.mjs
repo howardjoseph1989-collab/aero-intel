@@ -127,7 +127,7 @@ describe('GEO residue #7463', () => {
     assert.equal(new Set(headings).size, headings.length, 'section headings must be unique');
     const contents = generated.match(/<!-- corpus-navigation:start -->([\s\S]*?)<!-- corpus-navigation:end -->/)?.[1];
     assert.ok(contents, 'the generated corpus needs a table of contents');
-    const links = [...contents.matchAll(/^- \[([^\]]+)\]\(#([^\)]+)\)$/gm)];
+    const links = [...contents.matchAll(/^- \[([^\]]+)\]\(#([^)]+)\)$/gm)];
     assert.deepEqual(links.map((match) => match[1]), headings, 'contents must enumerate every section in order');
     assert.equal(new Set(links.map((match) => match[2])).size, links.length);
     for (const [, , anchor] of links) {

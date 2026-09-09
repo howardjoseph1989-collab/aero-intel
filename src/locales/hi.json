@@ -1,9 +1,9 @@
 {
   "shell": {
-    "documentTitle": "वर्ल्ड मॉनिटर — रियल-टाइम ग्लोबल इंटेलिजेंस डैशबोर्ड",
+    "documentTitle": "AERO INTEL — Personal Live Intelligence Dashboard",
     "metaDescription": "रियल-टाइम ग्लोबल जानकारी का मंच। WIRED में दिखाया गया। 190 देशों में 2 मिलियन से ज्यादा लोग इस्तेमाल करते हैं। झगड़े, बाजार, सेना, OSINT एक साथ देखें।",
     "offlineTitle": "आप ऑफलाइन हैं",
-    "offlineMessage": "वर्ल्ड मॉनिटर के लिए रियल-टाइम जानकारी के लिए इंटरनेट कनेक्शन चाहिए।",
+    "offlineMessage": "AERO INTEL के लिए रियल-टाइम जानकारी के लिए इंटरनेट कनेक्शन चाहिए।",
     "offlineRetry": "फिर कोशिश करें"
   },
   "widgets": {
@@ -556,7 +556,8 @@
     "fearGreed": "डर और लालच",
     "marketBreadth": "बाजार की पहुंच",
     "climateNews": "जलवायु समाचार",
-    "fx": "FX दरें"
+    "fx": "FX दरें",
+    "usLocal": "US Local"
   },
   "commands": {
     "prefixes": {
@@ -779,7 +780,7 @@
         "some": "कुछ फीचर API की चाहते हैं"
       },
       "reserveEarlyAccess": "जल्दी एक्सेस रिजर्व करें",
-      "skipSetup": "सेटअप छोड़ें — एक World Monitor लाइसेंस सब अनलॉक करता है। जल्दी एक्सेस के लिए इंतजार सूची में शामिल हों।",
+      "skipSetup": "सेटअप छोड़ें — एक AERO INTEL लाइसेंस सब अनलॉक करता है। जल्दी एक्सेस के लिए इंतजार सूची में शामिल हों।",
       "summary": {
         "desktop": "डेस्कटॉप मोड",
         "web": "वेब मोड (सिर्फ पढ़ने के लिए, सर्वर-प्रबंधित क्रेडेंशियल्स)",
@@ -810,7 +811,7 @@
       }
     },
     "settingsWindow": {
-      "shellTitle": "World Monitor सेटिंग्स",
+      "shellTitle": "AERO INTEL सेटिंग्स",
       "shellSearchPlaceholder": "सेटिंग्स खोजें...",
       "shellCancel": "रद्द करें",
       "shellSaveClose": "सहेजें और बंद करें",

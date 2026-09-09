@@ -3,6 +3,7 @@ import {
   ORGANIZATION_ID,
   WEBSITE_ID,
 } from './schema-graph-ids';
+import { PRODUCT_NAME } from './product';
 import { VARIANT_META, type VariantMeta } from './variant-meta';
 import {
   VARIANT_SEO_PARAGRAPHS,
@@ -31,7 +32,7 @@ export function renderVariantNoscriptMainHtml(variant: VariantSeoKey, meta: Vari
   return `<main id="dashboard-noscript" class="dashboard-noscript">
         <h2>${escHtml(meta.siteName)} requires JavaScript for the live map</h2>
         ${about}
-        <p>Visit the <a href="${CANONICAL_ORIGIN}">World Monitor homepage</a> for the platform overview, or use the indexable reference pages below without enabling JavaScript.</p>
+        <p>Visit the <a href="${CANONICAL_ORIGIN}">${PRODUCT_NAME} homepage</a> for the platform overview, or use the indexable reference pages below without enabling JavaScript.</p>
         <nav aria-label="${escHtml(meta.siteName)} references">
           <ul>
             <li><a href="${CANONICAL_ORIGIN}countries/">Country intelligence</a></li>
@@ -140,7 +141,7 @@ function variantBreadcrumbJsonLd(meta: VariantMeta): string {
       {
         '@type': 'ListItem',
         position: 1,
-        name: 'World Monitor',
+        name: PRODUCT_NAME,
         item: CANONICAL_ORIGIN,
       },
       {

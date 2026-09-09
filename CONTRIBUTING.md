@@ -1,4 +1,6 @@
-# Contributing to World Monitor
+# Contributing to AERO INTEL
+
+AERO INTEL is a personal fork of World Monitor ([koala73/worldmonitor](https://github.com/koala73/worldmonitor)). The contribution workflow below is the upstream procedure and still applies.
 
 Thank you for your interest in contributing to World Monitor! This project thrives on community contributions — whether it's code, data sources, documentation, or bug reports.
 

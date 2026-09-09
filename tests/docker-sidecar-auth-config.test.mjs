@@ -74,7 +74,7 @@ test('Docker nginx injects LOCAL_API_TOKEN through a private transport header', 
 
 test('Docker nginx applies an inert response policy to the RSS proxy route', () => {
   const nginx = readProjectFile('docker/nginx.conf');
-  const rssBlock = nginx.match(/location = \/api\/rss-proxy \{[\s\S]*?\n    \}/)?.[0] ?? '';
+  const rssBlock = nginx.match(/location = \/api\/rss-proxy \{[\s\S]*?\n {4}\}/)?.[0] ?? '';
 
   assert.ok(rssBlock, 'RSS proxy must have a dedicated Docker location');
   assert.match(rssBlock, /add_header X-Content-Type-Options "nosniff" always;/);

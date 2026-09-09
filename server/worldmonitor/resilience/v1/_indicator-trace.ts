@@ -270,7 +270,7 @@ function allocateFourDecimalContributions(
     const floorUnits = Math.floor(exactUnits);
     return { index, floorUnits, remainder: exactUnits - floorUnits };
   });
-  let remaining = targetUnits - allocations.reduce((sum, item) => sum + item.floorUnits, 0);
+  const remaining = targetUnits - allocations.reduce((sum, item) => sum + item.floorUnits, 0);
   allocations.sort((left, right) => right.remainder - left.remainder || left.index - right.index);
   for (let index = 0; index < remaining; index += 1) {
     const allocation = allocations[index % allocations.length];

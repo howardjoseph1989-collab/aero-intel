@@ -298,7 +298,7 @@ export async function applyWebMcpSwitchMonitor(
       reason: 'unavailable',
       message: navigation === 'unavailable'
         ? 'That monitor is not available on this dashboard.'
-        : 'World Monitor could not switch monitors.',
+        : 'AERO INTEL could not switch monitors.',
       context,
     };
   }
