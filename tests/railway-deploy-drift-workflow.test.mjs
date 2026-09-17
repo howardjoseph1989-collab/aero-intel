@@ -228,9 +228,9 @@ function executeWorkflowShell(run, fixture, {
 }
 
 describe('Railway Native Deploy Health workflow', () => {
-  it('is one six-hourly and manually dispatchable read-only workflow', () => {
+  it('is a manually dispatchable read-only workflow', () => {
     assert.equal(workflow.name, 'Railway Native Deploy Health');
-    assert.deepEqual(workflow.on.schedule, [{ cron: '17 */6 * * *' }]);
+    assert.equal(workflow.on.schedule, undefined, 'cron is disabled on this fork to stop failure-mail noise');
     assert.ok(Object.hasOwn(workflow.on, 'workflow_dispatch'));
     assert.deepEqual(workflow.permissions, { contents: 'read' });
     assert.deepEqual(workflow.concurrency, {

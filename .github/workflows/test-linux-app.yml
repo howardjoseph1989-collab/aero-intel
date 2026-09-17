@@ -6,13 +6,11 @@ name: 'Desktop Canary (Linux)'
 # the bundle compiles, not that the installed app works — this canary is the
 # drift alarm between releases. Also dispatchable on demand.
 
+# Cron removed on this fork: the twice-weekly canary has no matching desktop
+# secrets/environment and emailed the owner "Run failed". Keep
+# workflow_dispatch for on-demand checks.
 on:
   workflow_dispatch:
-  schedule:
-    # Twice weekly (Mon/Thu 05:23 UTC): frequent enough to surface desktop
-    # drift well inside a 30-day release-freshness target without paying the
-    # ~40min build on every merge.
-    - cron: '23 5 * * 1,4'
 
 # Group by event too: without it, a manual dispatch on main would cancel an
 # in-flight scheduled canary run (both share github.ref = main), silently

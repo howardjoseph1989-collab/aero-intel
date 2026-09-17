@@ -1,8 +1,9 @@
 name: Seed Freshness Monitor
 
+# Cron removed on this fork: production ingestion credentials/gate context are
+# absent, so the 15-minute schedule emailed the owner "Run failed" on every
+# tick. Keep workflow_dispatch for on-demand checks.
 on:
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 # Transition publication must finish before the next observation can classify

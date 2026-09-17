@@ -1522,7 +1522,7 @@ describe('scheduled seed freshness monitor', () => {
     });
   });
 
-  it('runs on a schedule without grading pre-deployment ingestion pushes', () => {
+  it('does not grade pre-deployment ingestion pushes and stays manual-only', () => {
     const workflow = readFileSync(
       new URL('../.github/workflows/seed-freshness-monitor.yml', import.meta.url),
       'utf8',
@@ -1544,10 +1544,10 @@ describe('scheduled seed freshness monitor', () => {
     const triggers = Array.isArray(on) ? on : Object.keys(on);
     assert.deepEqual(
       [...triggers].sort(),
-      ['schedule', 'workflow_dispatch'],
-      'the monitor must run only on a schedule or an explicit manual dispatch',
+      ['workflow_dispatch'],
+      'cron is disabled on this fork; the monitor must remain manual-only',
     );
-    assert.equal(on.schedule[0].cron, '*/15 * * * *');
+    assert.equal(on.schedule, undefined);
     assert.match(workflow, /actions\/setup-node@[a-f0-9]+/);
     assert.match(workflow, /node-version:\s*['"]24['"]/);
     assert.match(workflow, /context\s*==\s*"gate"/);

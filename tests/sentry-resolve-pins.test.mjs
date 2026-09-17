@@ -393,7 +393,7 @@ describe('Sentry resolve-pin audit', () => {
       'the guard must run before the audit or the audit reports the failure first',
     );
 
-    assert.ok(workflow.on.schedule?.length >= 1, 'the audit must run on a schedule');
+    assert.equal(workflow.on.schedule, undefined, 'cron is disabled on this fork to stop failure-mail noise');
     assert.ok('workflow_dispatch' in workflow.on);
     assert.deepEqual(workflow.permissions, { contents: 'read' });
     assert.deepEqual(workflow.concurrency, {

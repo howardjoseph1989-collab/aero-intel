@@ -1,8 +1,9 @@
 name: Railway Native Deploy Health
 
+# Cron removed on this fork: Railway production viewer credentials are absent,
+# so the six-hourly schedule emailed the owner "Run failed" on every tick.
+# Keep workflow_dispatch for on-demand checks.
 on:
-  schedule:
-    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 concurrency:

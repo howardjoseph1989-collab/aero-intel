@@ -15,9 +15,10 @@ name: Post-merge Deploy Monitor
 # gating on main would silence exactly the alarms we want (#5565, the same
 # reasoning analytics-collector-monitor.yml documents).
 
+# Cron removed on this fork: there is no production deploy fleet to monitor, so
+# the 10-minute schedule emailed the owner "Run failed" on every tick. Keep
+# workflow_dispatch for on-demand checks.
 on:
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 permissions:

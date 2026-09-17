@@ -18,9 +18,8 @@ const workflowPath = resolve(repoRoot, '.github/workflows/postmerge-deploy-monit
 const workflow = YAML.parse(readFileSync(workflowPath, 'utf8'));
 
 describe('post-merge deploy monitor workflow', () => {
-  it('runs on a schedule and on demand, and supersedes longer runs', () => {
-    assert.ok(workflow.on.schedule, 'workflow must run on a schedule (a run event cannot see a workflow that never ran)');
-    assert.match(workflow.on.schedule[0].cron, /^\*\/10 \* \* \* \*$/);
+  it('runs on demand only, and supersedes longer runs', () => {
+    assert.equal(workflow.on.schedule, undefined, 'cron is disabled on this fork to stop failure-mail noise');
     assert.ok(Object.hasOwn(workflow.on, 'workflow_dispatch'));
     assert.deepEqual(workflow.concurrency, {
       group: 'postmerge-deploy-monitor',
