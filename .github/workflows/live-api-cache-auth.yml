@@ -67,8 +67,6 @@ name: Live API Cache/Auth Sweep
 
 on:
   deployment_status:
-  schedule:
-    - cron: '47 */6 * * *'
   workflow_dispatch:
 
 permissions:

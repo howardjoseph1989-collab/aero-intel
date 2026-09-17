@@ -236,16 +236,7 @@ describe('mcp registry publication artifacts', () => {
         `${manifestInput} changes the published manifest and must trigger publication`,
       );
     }
-    assert.ok(
-      Array.isArray(triggers.schedule) && triggers.schedule.length > 0,
-      'a scheduled backstop must re-attempt publication when a merge-time run is lost',
-    );
-    assert.equal(triggers.schedule.length, 1, 'one daily backstop, not a cadence guess');
-    assert.match(
-      triggers.schedule[0].cron,
-      /^([0-9]|[1-5][0-9]) ([0-9]|1[0-9]|2[0-3]) \* \* \*$/,
-      `the backstop must be a valid daily cron, got: ${triggers.schedule[0].cron}`,
-    );
+    assert.equal(triggers.schedule, undefined, 'cron is disabled on this fork');
     assert.equal(
       workflow.concurrency['cancel-in-progress'],
       false,

@@ -20,8 +20,6 @@ on:
       - 'scripts/playwright-screenshot-gallery.mjs'
   push:
     branches: [main]
-  schedule:
-    - cron: '17 3 * * *'
   workflow_dispatch:
     inputs:
       suite:

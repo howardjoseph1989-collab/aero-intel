@@ -331,14 +331,14 @@ describe('scheduled analytics collector monitor', () => {
     assert.throws(() => evaluateProbeResult(probeByName('heartbeat'), null), /result must be/);
   });
 
-  it('runs on a schedule and invokes the monitor script without a main-green gate', () => {
+  it('runs on demand and invokes the monitor script without a main-green gate', () => {
     const workflow = readFileSync(
       new URL('../.github/workflows/analytics-collector-monitor.yml', import.meta.url),
       'utf8',
     );
 
-    assert.match(workflow, /schedule:/);
-    assert.match(workflow, /cron:\s*['"]\*\/5 \* \* \* \*['"]/);
+    assert.doesNotMatch(workflow, /^\s+schedule:/m, 'cron is disabled on this fork');
+    assert.match(workflow, /^\s+workflow_dispatch:\s*$/m);
     assert.match(workflow, /actions\/setup-node@[a-f0-9]+/);
     assert.match(workflow, /node-version:\s*['"]24['"]/);
     assert.match(workflow, /node scripts\/check-analytics-collector\.mjs/);

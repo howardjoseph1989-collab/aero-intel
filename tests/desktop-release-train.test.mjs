@@ -251,7 +251,7 @@ test('the workflow watches release inputs, runs serially, and has the required w
   assert.ok(triggers.push.paths.includes('scripts/resolve-desktop-release.mjs'));
   assert.ok(triggers.push.paths.includes('src-tauri/tauri.conf.json'));
   assert.ok(triggers.push.paths.includes('.github/workflows/desktop-release-train.yml'));
-  assert.equal(triggers.schedule[0].cron, '17 4 * * *');
+  assert.equal(triggers.schedule, undefined, 'cron is disabled on this fork');
   assert.ok(Object.hasOwn(triggers, 'workflow_dispatch'));
   assert.deepEqual(workflow.permissions, { contents: 'write', actions: 'write' });
   assert.deepEqual(workflow.concurrency, {

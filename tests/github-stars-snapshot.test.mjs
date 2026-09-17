@@ -6,7 +6,6 @@ import { describe, it } from 'node:test';
 
 import {
   latestValidGithubStarsSnapshot,
-  MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS,
   starsInteractionCounter,
 } from '../scripts/github-stars-snapshot.mjs';
 
@@ -150,27 +149,12 @@ describe('github stars snapshot lookup', () => {
     }
   });
 
-  // The refresh cron and the staleness ceiling are one contract (mirrors the
-  // pulse cadence guard in tests/crawlable-corpus.test.mjs): relaxing one
-  // alone silently reopens the rotting-figure gap from #7641.
-  it('keeps the star-snapshot staleness ceiling within reach of the refresh cron', () => {
-    const cron = githubStarsRefreshWorkflow.match(/^\s*- cron: '([^']+)'/m)?.[1];
-    assert.ok(cron, 'the star refresh workflow must declare a cron schedule');
-
-    const [, , dayOfMonth, month, dayOfWeek] = cron.split(/\s+/);
-    assert.equal(dayOfMonth, '1', 'the monthly refresh must run on the first day');
-    assert.equal(month, '*', 'the monthly refresh must run every month');
-    assert.equal(dayOfWeek, '*', 'the monthly refresh must not be limited to a weekday');
-    const cadenceDays = 31;
-
-    assert.ok(
-      MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS > cadenceDays,
-      `the ${MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS}-day ceiling must exceed the ${cadenceDays}-day refresh cadence, or a healthy refresh cycle reds the build`,
-    );
-    assert.ok(
-      MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS <= cadenceDays * 2,
-      `the ${MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS}-day ceiling tolerates more than two missed ${cadenceDays}-day refreshes; the published figure would rot that long`,
-    );
+  // Operator policy on this fork: no unattended GitHub Actions. Star snapshot
+  // refresh stays on workflow_dispatch. Staleness is still gated by
+  // MAX_GITHUB_STARS_SNAPSHOT_AGE_DAYS in the freeze helper tests above.
+  it('keeps star-snapshot refresh on demand (no unattended cron)', () => {
+    assert.doesNotMatch(githubStarsRefreshWorkflow, /^\s+schedule:/m, 'cron is disabled on this fork');
+    assert.match(githubStarsRefreshWorkflow, /^\s+workflow_dispatch:\s*$/m);
   });
 
   it('keeps a prior snapshot so corrupt-newest fallback survives refresh pruning', () => {

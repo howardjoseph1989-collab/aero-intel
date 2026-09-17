@@ -12,9 +12,8 @@ name: Refresh Crawlable Live Pulse
 # reopens the gap, and tests/crawlable-corpus.test.mjs asserts they agree.
 # Mirrors .github/workflows/resilience-snapshot-refresh.yml.
 
+# Cron removed on this fork: no unattended GitHub Actions. Keep workflow_dispatch.
 on:
-  schedule:
-    - cron: '41 4 * * 1'
   workflow_dispatch:
     inputs:
       developments_coverage_ratio:

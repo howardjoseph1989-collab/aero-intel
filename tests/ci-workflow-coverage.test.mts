@@ -418,31 +418,16 @@ function securityAuditMatrixLockfiles(): string[] {
 describe('MCP live smoke — the production detection net', () => {
   const smokeWorkflow = read(resolve(workflowsDir, 'mcp-live-smoke.yml'));
 
-  // A 2026-09-03 FUNCTION_INVOCATION_FAILED outage ran 13:24→16:30 UTC and was
-  // caught by neither Sentry nor Axiom (the platform kills the function before
-  // any handler code runs, so nothing first-party can observe it). The schedule
-  // is therefore the only net for a failure BETWEEN deploys, and its cadence is
-  // the upper bound on how long one can run unnoticed. At `23 */6 * * *` the
-  // outage fell entirely between the 12:23 and 18:23 runs.
-  it('probes production at least four times an hour, not six-hourly', () => {
+  // Operator policy on this fork: no unattended GitHub Actions. Between-deploy
+  // production failures are caught by on-demand dispatch, push, or a successful
+  // Vercel Production deployment_status — not a 15-minute cron.
+  it('does not run unattended; keeps dispatch, push, and production-deploy probes', () => {
     const crons = Array.from(
       smokeWorkflow.matchAll(/^\s+- cron:\s*['"]([^'"]+)['"]/gm),
       ([, value]) => value.trim(),
     );
-    assert.equal(crons.length, 1, 'exactly one schedule entry');
-    const fields = crons[0].split(/\s+/);
-    assert.equal(fields.length, 5, `schedule must have exactly five fields; got "${crons[0]}"`);
-    const [minute, hour, dayOfMonth, month, dayOfWeek] = fields;
-    assert.match(
-      minute,
-      /^\*\/([1-9]|1[0-5])$/,
-      `schedule must run at least every 15 minutes; got "${crons[0]}". A sparser `
-        + 'cadence is how a multi-hour outage slips between two runs.',
-    );
-    assert.equal(hour, '*', 'the hour field must not narrow the schedule back down');
-    assert.equal(dayOfMonth, '*', 'the day-of-month field must not narrow the schedule back down');
-    assert.equal(month, '*', 'the month field must not narrow the schedule back down');
-    assert.equal(dayOfWeek, '*', 'the day-of-week field must not narrow the schedule back down');
+    assert.deepEqual(crons, [], 'cron is disabled on this fork');
+    assert.match(smokeWorkflow, /^\s+workflow_dispatch:\s*$/m);
   });
 
   // These three literals are the entire gate. GitHub's API returns
@@ -493,11 +478,11 @@ describe('MCP live smoke — the production detection net', () => {
 });
 
 describe('live cache sweep deployment timing', () => {
-  it('runs after successful production deploys and retains scheduled and manual checks', () => {
+  it('runs after successful production deploys and retains manual checks', () => {
     const workflow = YAML.parse(read(resolve(workflowsDir, 'live-api-cache-auth.yml')));
     assert.ok(Object.hasOwn(workflow.on, 'deployment_status'));
     assert.equal(workflow.on.push, undefined, 'a merge is not a completed production deployment');
-    assert.deepEqual(workflow.on.schedule, [{ cron: '47 */6 * * *' }]);
+    assert.equal(workflow.on.schedule, undefined, 'cron is disabled on this fork');
     assert.ok(Object.hasOwn(workflow.on, 'workflow_dispatch'));
 
     const job = workflow.jobs.sweep;
@@ -507,7 +492,6 @@ describe('live cache sweep deployment timing', () => {
       ['deployment_status', 'failure', 'Production', 'vercel[bot]', false],
       ['deployment_status', 'success', 'Preview', 'vercel[bot]', false],
       ['deployment_status', 'success', 'Production', 'railway[bot]', false],
-      ['schedule', '', '', '', true],
       ['workflow_dispatch', '', '', '', true],
     ]) {
       const github = { event_name: event, event: event === 'deployment_status' ? {
@@ -1698,12 +1682,12 @@ describe('CI workflow coverage', () => {
     );
   });
 
-  it('runs scheduled and per-PR production dependency audits for every package lockfile', () => {
+  it('runs per-PR and main-push production dependency audits for every package lockfile', () => {
     const packageLockfiles = collectPackageLockfiles();
 
     assert.match(securityAuditWorkflow, /\n {2}pull_request:\n/, 'security-audit.yml must run on PRs');
     assert.match(securityAuditWorkflow, /\n {2}push:\n {4}branches: \[main\]\n/, 'security-audit.yml must run on main pushes');
-    assert.match(securityAuditWorkflow, /\n {2}schedule:\n/, 'security-audit.yml must run on a schedule');
+    assert.doesNotMatch(securityAuditWorkflow, /\n {2}schedule:\n/, 'security-audit.yml must not run on a schedule');
     assert.match(securityAuditWorkflow, /\n {2}security-audit:\n/, 'security-audit.yml must define the aggregate security-audit check');
     assert.match(securityAuditWorkflow, /\n {4}name: security-audit\n/, 'security-audit.yml must publish a security-audit check run');
     assert.match(

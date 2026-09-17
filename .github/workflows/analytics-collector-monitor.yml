@@ -5,9 +5,8 @@ name: Analytics Collector Monitor
 # independent of repo state, and a gate is one more way for this to go quiet —
 # which is exactly how a 4-day analytics blackout went unnoticed (#5565).
 
+# Cron removed on this fork: no unattended GitHub Actions. Keep workflow_dispatch.
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:

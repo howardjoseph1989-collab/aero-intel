@@ -56,8 +56,6 @@ on:
       - 'scripts/mcp-proxy-live-smoke.mjs'
       - 'scripts/mcp-schema-wire-check.mjs'
       - '.github/workflows/mcp-live-smoke.yml'
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 permissions:

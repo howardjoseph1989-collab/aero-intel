@@ -65,7 +65,7 @@ describe('E2E visual workflow contract', () => {
     }
   });
 
-  it('keeps goldens off the main-push hot path and on nightly / map PRs', () => {
+  it('keeps goldens off the main-push hot path and on map PRs / dispatch', () => {
     const goldens = visual.jobs['visual-goldens'];
     assert.ok(goldens, 'visual-goldens job must exist');
     assert.match(
@@ -73,7 +73,7 @@ describe('E2E visual workflow contract', () => {
       /github\.event_name != 'push'/,
       'visual-goldens must skip ordinary main pushes',
     );
-    assert.ok(visual.on.schedule, 'nightly schedule must exist');
+    assert.equal(visual.on.schedule, undefined, 'cron is disabled on this fork');
     assert.ok(visual.on.workflow_dispatch, 'manual dispatch must exist');
   });
 
