@@ -152,8 +152,8 @@ test('the GitHub 3000-file cap fails open', () => {
   assertFailsOpen(classify(files));
 });
 
-test('the weekly renderer canary keeps every required lint classifier enabled', () => {
-  assert.deepEqual(workflow.on.schedule, [{ cron: '17 6 * * 1' }]);
+test('a schedule event keeps every required lint classifier enabled', () => {
+  assert.equal(workflow.on.schedule, undefined, 'cron is disabled on this fork');
   const result = classify([], { event: 'schedule' });
   assert.equal(result.code, 'true');
   assert.equal(result.markdown, 'true');

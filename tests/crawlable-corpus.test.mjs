@@ -53,7 +53,6 @@ import {
   hasObservedValue,
   laterDate,
   loadCorpusData,
-  MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS,
   newestDevelopmentsInstant,
   renderCountryAnalysis,
   renderCountryDevelopments,
@@ -1672,43 +1671,22 @@ describe('crawlable corpus generator', () => {
     }
   });
 
-  // The refresh cron and the staleness ceiling are one contract. The ceiling
-  // was 45 days against a monthly cron, which let pages headed "Approx.
-  // 24-hour movement" ship on data up to six weeks old (#7530). Assert the two
-  // still agree so relaxing one alone cannot silently reopen that gap, and that
-  // the branch key advances as fast as the schedule does — a month-keyed branch
-  // under a weekly cron would find week 1's PR and skip weeks 2-4.
-  it('keeps the pulse staleness ceiling within reach of the refresh cron', () => {
+  // Operator policy on this fork: no unattended GitHub Actions. Pulse refresh
+  // stays on workflow_dispatch. The weekly branch key still matters so a second
+  // on-demand run in the same ISO week reuses the review PR instead of no-op'ing
+  // behind a month-keyed branch.
+  it('keeps pulse refresh on demand with a weekly review branch key', () => {
     const workflow = readFileSync(
       resolve(repoRoot, '.github/workflows/crawlable-pulse-refresh.yml'),
       'utf8',
     );
-    const cron = workflow.match(/^\s*- cron: '([^']+)'/m)?.[1];
-    assert.ok(cron, 'the pulse refresh workflow must declare a cron schedule');
-
-    const [, , dayOfMonth, month, dayOfWeek] = cron.split(/\s+/);
-    let cadenceDays;
-    if (dayOfMonth === '*' && month === '*' && dayOfWeek !== '*') cadenceDays = 7;
-    else if (dayOfMonth !== '*' && month === '*') cadenceDays = 31;
-    else if (dayOfMonth === '*' && month === '*' && dayOfWeek === '*') cadenceDays = 1;
-    else assert.fail(`unrecognised pulse refresh cadence: ${cron}`);
-
-    assert.ok(
-      MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS > cadenceDays,
-      `the ${MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS}-day ceiling must exceed the ${cadenceDays}-day refresh cadence, or a healthy refresh cycle reds the build`,
+    assert.doesNotMatch(workflow, /^\s+schedule:/m, 'cron is disabled on this fork');
+    assert.match(workflow, /^\s+workflow_dispatch:\s*$/m);
+    assert.match(
+      workflow,
+      /period=\$\(date -u \+%G-W%V\)/,
+      'on-demand refresh still needs a weekly branch key; a %Y-%m key makes later runs in a month no-op',
     );
-    assert.ok(
-      MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS <= cadenceDays * 2,
-      `the ${MAX_LIVE_PULSE_SNAPSHOT_AGE_DAYS}-day ceiling tolerates more than two missed ${cadenceDays}-day refreshes; pages advertising 24-hour movement would ship on data that old`,
-    );
-
-    if (cadenceDays <= 7) {
-      assert.match(
-        workflow,
-        /period=\$\(date -u \+%G-W%V\)/,
-        'a weekly-or-faster cron needs a branch key that advances weekly; a %Y-%m key makes runs 2-4 of a month no-op',
-      );
-    }
   });
 
   it('requires the API key before freezing the crawlable pulse', () => {

@@ -13,9 +13,8 @@ name: Refresh GitHub Stars Snapshot
 # workflow no API key is needed: the freeze reads the public repository
 # endpoint, well inside the unauthenticated rate limit for one call a month.
 
+# Cron removed on this fork: no unattended GitHub Actions. Keep workflow_dispatch.
 on:
-  schedule:
-    - cron: '29 5 1 * *'
   workflow_dispatch:
 
 permissions:

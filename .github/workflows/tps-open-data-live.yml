@@ -44,8 +44,6 @@ on:
       - 'scripts/lib/tps-open-data.mjs'
       - 'tests/tps-open-data-live-contract.test.mjs'
       - '.github/workflows/tps-open-data-live.yml'
-  schedule:
-    - cron: '11 */12 * * *'
   workflow_dispatch:
 
 permissions:

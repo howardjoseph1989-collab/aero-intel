@@ -132,7 +132,8 @@ describe('published resilience snapshot freshness', () => {
       'utf8',
     );
 
-    assert.match(workflow, /cron: '17 5 1 \* \*'/);
+    assert.doesNotMatch(workflow, /^\s+schedule:/m, 'cron is disabled on this fork');
+    assert.match(workflow, /^\s+workflow_dispatch:\s*$/m);
     assert.match(workflow, /secrets\.WORLDMONITOR_API_KEY/);
     assert.match(workflow, /node scripts\/freeze-resilience-ranking\.mjs/);
     assert.match(workflow, /npm run build:crawlable-corpus/);

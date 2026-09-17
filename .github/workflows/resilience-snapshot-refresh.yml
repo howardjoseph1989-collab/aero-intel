@@ -1,8 +1,7 @@
 name: Refresh Published Resilience Snapshot
 
+# Cron removed on this fork: no unattended GitHub Actions. Keep workflow_dispatch.
 on:
-  schedule:
-    - cron: '17 5 1 * *'
   workflow_dispatch:
 
 permissions:

@@ -69,8 +69,6 @@ on:
       - 'scripts/lib/openapi-codegen.mjs'
       - 'shared/china-decision-signal-manifest.ts'
       - '.github/workflows/china-decision-parity-live.yml'
-  schedule:
-    - cron: '11 */6 * * *'
   workflow_dispatch:
     inputs:
       base_url:

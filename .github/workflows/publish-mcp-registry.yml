@@ -26,8 +26,6 @@ on:
       - 'scripts/prepare-mcp-registry-manifest.mjs'
       - 'scripts/publish-mcp-registry.mjs'
       - 'server.json'
-  schedule:
-    - cron: '41 5 * * *'
   release:
     types: [published]
   workflow_dispatch:

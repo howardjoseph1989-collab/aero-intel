@@ -18,8 +18,6 @@ on:
   workflow_run:
     workflows: ["Test", "Typecheck", "Lint Code", "Security Audit", "Stacked Merge Guard", "Proto Generation Check"]
     types: [completed]
-  schedule:
-    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       sha:

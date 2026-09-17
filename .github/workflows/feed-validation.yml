@@ -32,8 +32,6 @@ on:
       - 'api/_rss-allowed-domains.js'
       - 'shared/rss-allowed-domains.json'
       - '.github/workflows/feed-validation.yml'
-  schedule:
-    - cron: '0 0 * * *'
   workflow_dispatch:
 
 permissions:

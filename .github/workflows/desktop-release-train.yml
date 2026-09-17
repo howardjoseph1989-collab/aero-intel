@@ -17,8 +17,6 @@ on:
       - 'src-tauri/Cargo.lock'
       - 'src-tauri/Cargo.toml'
       - 'src-tauri/tauri.conf.json'
-  schedule:
-    - cron: '17 4 * * *'
   workflow_dispatch:
 
 permissions:
